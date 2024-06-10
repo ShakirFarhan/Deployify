@@ -1,0 +1,25 @@
+{
+  "name": "proxy-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "tsc-watch --onSuccess \"npm start\"",
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "Shakir Farhan",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/http-proxy": "^1.17.14",
+    "tsc-watch": "^6.2.0",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "http-proxy": "^1.18.1"
+  }
+}
