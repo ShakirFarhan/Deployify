@@ -9,6 +9,7 @@ class SocketService {
         origin: '*',
       },
     });
+    // Subscribing to logs where the channel name start's with LOGS
     sub.psubscribe('LOGS:*');
   }
   get io() {

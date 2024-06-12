@@ -16,4 +16,15 @@ export const config = {
   REDIS: {
     URL: process.env.APP_REDIS_URL,
   },
+  JWT_SECRET: process.env.JWT_SECRET as string,
+  NODEMAILER: {
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    secure: Boolean(process.env.SMTP_SECURE),
+    service: process.env.SMTP_SERVICE,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  },
 };
