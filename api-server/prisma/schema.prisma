@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+enum AuthProvider{
+  local
+  github
+  google
+}
+enum AccountStatus{
+  active
+  suspended
+  deactivated
+}
+enum UserRole{
+  user 
+  admin
+  moderator
+}
+model User{
+  id String @id @default(uuid())
+  email String @unique 
+  password String @unique
+  salt String?
+  githubId String? @map("github_id")
+  fullName String? @map("full_name")
+  verified Boolean @default(false)
+  githubUsername String? @map("github_username")
+  status AccountStatus @default(active)
+  role UserRole @default(user)
+  provider AuthProvider @default(local)
+  createdAt DateTime? @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+  projects Project[]
+}
+
+model Project{
+  id String @id @default(uuid())
+  name String?
+  slug String @unique
+  repoUrl String @map("repo_url")
+  userId String @map("user_id")
+  user User @relation(fields: [userId],references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+  deployments Deployment[]
+  @@map("projects")
+}
+
+model Deployment{
+  id String @id @default(uuid())
+  projectId String @map("project_id")
+  project Project @relation(fields: [projectId],references: [id])
+  
+}

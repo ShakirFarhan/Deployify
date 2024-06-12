@@ -38,7 +38,9 @@ async function init() {
   prc.on('close', async function () {
     console.log('Build Completed');
     publishLog('Build Completed');
+    // What if the build command generated build folder
     const distPath = path.join(outDirPath, 'dist');
+
     const distContent = fs.readdirSync(distPath, {
       recursive: true,
     });
@@ -59,6 +61,7 @@ async function init() {
     }
     publishLog(`${APP_PROJECT_SLUG} is live now`);
     console.log(`${APP_PROJECT_SLUG} is live now`);
+    process.exit(0);
   });
 }
 
