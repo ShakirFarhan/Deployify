@@ -1,37 +1,18 @@
 import express from 'express';
-import { ECSClient, RunTaskCommand } from '@aws-sdk/client-ecs';
+import { RunTaskCommand } from '@aws-sdk/client-ecs';
 import slugify from 'unique-slug';
 import dotenv from 'dotenv';
 import { config } from './config/production';
-import { Server } from 'socket.io';
-import Redis from 'ioredis';
+import SocketService from './services/socket.service';
+import { ecsClient } from './services/aws/ecs.service';
+const socketService = new SocketService();
 dotenv.config();
 const app = express();
 const PORT = 8080;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-const ecsClient = new ECSClient({
-  region: config.AWS.APP_AWS_REGION,
-  credentials: {
-    accessKeyId: config.AWS.APP_AWS_ACCESS_KEY as string,
-    secretAccessKey: config.AWS.APP_AWS_SECRET_ACCESS_KEY as string,
-  },
-});
-const sub = new Redis(config.REDIS.URL as string);
-const io = new Server({
-  cors: {
-    origin: '*',
-  },
-});
-io.on('connection', (socket) => {
-  socket.on('subscribe', (channel) => {
-    console.log(channel);
-    socket.join(channel);
-    socket.emit('message', `Joined ${channel}`);
-  });
-});
 
-app.get('/project', async (req, res) => {
+app.post('/project', async (req, res) => {
   const { repoUrl } = req.body;
   if (!repoUrl)
     return res.status(400).json({ message: 'Repo url is required' });
@@ -54,19 +35,6 @@ app.get('/project', async (req, res) => {
         {
           name: 'boostmydev-builder',
           environment: [
-            { name: 'APP_AWS_ACCESS_KEY', value: config.S3.APP_AWS_ACCESS_KEY },
-            {
-              name: 'APP_AWS_SECRET_ACCESS_KEY',
-              value: config.S3.APP_AWS_SECRET_ACCESS_KEY,
-            },
-            {
-              name: 'APP_AWS_REGION',
-              value: config.S3.APP_AWS_REGION,
-            },
-            {
-              name: 'APP_AWS_BUCKET',
-              value: config.S3.APP_AWS_BUCKET,
-            },
             {
               name: 'REPOSITORY_URL',
               value: repoUrl,
@@ -74,10 +42,6 @@ app.get('/project', async (req, res) => {
             {
               name: 'APP_PROJECT_SLUG',
               value: slug,
-            },
-            {
-              name: 'APP_REDIS_URL',
-              value: config.REDIS.URL,
             },
           ],
         },
@@ -88,17 +52,7 @@ app.get('/project', async (req, res) => {
   await ecsClient.send(command);
   res.status(200).json({ slug, url: `http://${slug}.localhost:8000` });
 });
-
-function initRedisSub() {
-  sub.psubscribe('LOGS:*');
-
-  sub.on('pmessage', (pattern, channel, message) => {
-    console.log(pattern, channel, message);
-    io.to(channel).emit('message', JSON.parse(message));
-  });
-}
-initRedisSub();
-io.listen(8765);
+socketService.initListeners();
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
