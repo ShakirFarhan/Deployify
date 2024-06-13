@@ -1,0 +1,129 @@
+.container {
+  width: 360px;
+  height: 100%;
+}
+
+.welcome {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.welcome h2 {
+  font-size: 1.8rem;
+  color: #fff;
+  margin: 0;
+  font-weight: 600;
+  text-align: center;
+}
+
+.welcome p {
+  font-size: 0.9rem;
+  letter-spacing: 0.45px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.welcome p a {
+  color: #5528d7;
+  font-weight: 600;
+  font-size: 0.88rem;
+  text-decoration: none;
+  letter-spacing: normal;
+  padding: 0.24rem;
+  outline: none;
+  border-radius: 6px;
+  border: 0.6px solid transparent;
+  transition: border 0.3s ease;
+}
+
+.form {
+  margin-top: 3.5rem;
+}
+
+.form > input {
+  width: 100%;
+  border-radius: 6px;
+  font-weight: 400;
+  outline: none;
+  font-size: 0.9rem;
+  letter-spacing: 0.34px;
+  padding: 0.6rem 0.7rem;
+  transition: color 0.3s ease, background-color 0.3s ease;
+  border: 1px solid #FFF;
+  color: #FFF;
+  background-color: transparent;
+}
+
+.form > input:focus {
+  color: #232323;
+  background-color: #FFF;
+}
+
+.continue__button {
+  width: 100%;
+  color: #fff;
+  background: #3c3b89;
+  font-weight: 500;
+  font-size: 0.78rem;
+  letter-spacing: 0.9px;
+  padding: 0.55rem 0;
+  border-radius: 6px;
+  border: none;
+  outline: none;
+  transition: background 0.3s ease;
+  cursor: pointer;
+}
+
+.continue__button:disabled {
+  background-color: #4946c3A0;
+  color: #FFFFFF90;
+}
+
+.separator {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin: 1.3rem 0;
+  justify-content: space-between;
+}
+.separator p {
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+.separator div {
+  width: 43%;
+  height: 1.3px;
+  background-color: #fff;
+}
+.socials {
+  display: flex;
+  flex-direction: column;
+  row-gap: 0.7rem;
+}
+.logo__container {
+  background-color: transparent;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+  user-select: none;
+}
+.logo__container img {
+  width: 70px;
+  height: 70px;
+}
+
+@media (pointer: fine) and (hover :hover) {
+  .welcome p a:is(:hover, :focus-visible) {
+    border-color: #5528d7;
+  }
+
+  .continue__button:not(:disabled):is(:hover, :focus-visible) {
+    background: #423fe7;
+  }
+}

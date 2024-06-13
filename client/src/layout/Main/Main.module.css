@@ -1,0 +1,34 @@
+.app__main {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 1.4rem 0;
+  color: var(--primary-text);
+  background-color: var(--primary-background);
+}
+
+.main__outlet {
+  max-width: 100%;
+  height: 100%;
+  width: 1400px;
+  margin: 0 auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.main__outlet::-webkit-scrollbar {
+  display: none;
+}
+
+@media all and (max-width: 700px) {
+  .app__main {
+    position: relative;
+    height: calc(100vh - 80px);
+  }
+
+  .main__outlet {
+    height: 100%;
+    width: 100%;
+  }
+}

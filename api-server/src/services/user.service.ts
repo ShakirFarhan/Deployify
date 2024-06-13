@@ -6,7 +6,7 @@ import ApiError from '../utils/apiError';
 import httpStatus from 'http-status';
 class UserService {
   public static async create(
-    data: Omit<User, 'id' | 'accountStatus' | 'verified' | 'role'>
+    data: Omit<User, 'id' | 'accountStatus' | 'role'>
   ) {
     return await prismaClient.user.create({
       data,

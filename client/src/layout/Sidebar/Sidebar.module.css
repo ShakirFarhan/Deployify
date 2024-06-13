@@ -1,0 +1,338 @@
+.sidebar {
+  width: 72px;
+  height: 100vh;
+  background: var(--sidebar-background);
+  flex: 0 0 auto;
+}
+
+.sidebar::-webkit-scrollbar {
+  overflow-y: auto;
+}
+
+.sidebar__div {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.logo {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 1rem 0;
+  column-gap: 0.2rem;
+  margin-right: 0.2rem;
+  padding: 0.8rem 0 0.8rem 1.2rem;
+}
+
+.logo img {
+  width: 36px;
+  height: auto;
+  aspect-ratio: 1;
+}
+
+.menu__items {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  height: 100%;
+}
+
+.menu__items__top {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+
+.menu__items__bottom {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.menu__item {
+  width: 100%;
+  display: flex;
+  outline: none;
+  font-family: inherit;
+  background-color: transparent;
+  border: none;
+  align-items: center;
+  color: var(--primary-text);
+  column-gap: 1.2rem;
+  border-left: 4px solid transparent;
+  cursor: pointer;
+  padding: 0.8rem 0 0.8rem 1rem;
+  position: relative;
+  transition: border 0.3s linear, color 0.3s linear;
+}
+
+.badge {
+  position: absolute;
+  top: 4px;
+  right: 1.65rem;
+  width: 14.5px;
+  height: 14.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 0.64rem;
+  background-color: var(--c-red);
+  color: var(--primary-background);
+}
+
+.item__bottom {
+  display: none;
+}
+
+.item__userprofile {
+  display: none;
+}
+
+.menu__item span,
+.user__profile a span {
+  width: 120px;
+  padding: 0.4rem;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  display: flex;
+  font-weight: 500;
+  justify-content: center;
+  align-items: center;
+  letter-spacing: 0.35px;
+  text-align: left;
+  position: absolute;
+  background-color: var(--secondary-text);
+  color: var(--primary-background);
+  z-index: 10;
+  left: 80px;
+  visibility: hidden;
+  opacity: 0;
+  border-left: 4px solid transparent;
+  box-shadow: var(--primary-shadow) 0px 1px 4px;
+  transition: opacity 0.7s ease;
+}
+
+@media all and (min-width: 700px) {
+  .menu__item span::before,
+  .user__profile a span::before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background-color: var(--secondary-text);
+    top: 50%;
+    transform: translate(0, -50%) rotate(135deg);
+    left: -5px;
+    z-index: -1;
+  }
+}
+
+@media (pointer: fine) and (hover: hover) {
+  .menu__item:is(:hover, :focus-visible) > span,
+  .user__profile a:is(:hover, :focus-visible) > span {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .menu__item:is(:hover, :focus-visible) {
+    border-left-color: var(--primary-border);
+  }
+}
+
+.menu__item.active__link {
+  border-left-color: var(--c-purple);
+}
+
+.menu__icon {
+  font-size: 1.4rem;
+}
+
+.separator {
+  width: 80%;
+  height: 4px;
+  background-color: var(--primary-background);
+}
+
+.user__profile {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.4rem;
+  padding: 1rem 0;
+}
+
+.user__profile a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  border: none;
+  color: var(--primary-text);
+  position: relative;
+}
+
+.user__profile a img {
+  width: 48px;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 40%;
+  border: 4px solid transparent;
+  object-fit: cover;
+  transition: border 0.3s ease;
+}
+
+.user__profile a.active__link > img {
+  border-color: var(--c-purple);
+}
+
+@media all and (max-width: 700px) {
+  .sidebar {
+    width: 100%;
+    max-width: 100%;
+    height: 80px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  .sidebar__div {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    padding: 0 0.8rem;
+    gap: 0.8rem;
+    overflow-x: scroll;
+    flex: 1;
+  }
+
+  .logo {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.2rem;
+  }
+
+  .logo img {
+    width: 36px;
+    height: auto;
+    aspect-ratio: 1;
+  }
+
+  .separator {
+    display: none;
+  }
+
+  .menu__items {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 0.8rem;
+    flex: 0 0 auto;
+  }
+
+  .menu__item span, .user__profile a span {
+    color: var(--secondary-text);
+  }
+
+  .sidebar__div::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+
+  .menu__items__top {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1.2rem;
+  }
+
+  .item__bottom,
+  .item__userprofile {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-right: 0.8rem;
+    position: relative;
+  }
+
+  .menu__items__bottom,
+  .user__profile {
+    display: none;
+  }
+
+  .item__userprofile img {
+    width: 44px;
+    height: auto;
+    aspect-ratio: 1;
+    border-radius: 42%;
+    border: 3px solid transparent;
+    transition: border 0.3s ease;
+  }
+
+  .item__userprofile.active__link > img {
+    border-color: var(--c-purple);
+  }
+
+  .menu__item {
+    width: 95px;
+    flex: 0 0 auto;
+    border-left: none;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.4rem;
+  }
+
+  .badge {
+    top: -8px;
+    right: 16px;
+  }
+
+  .menu__item.active__link, .menu__item.menu__item.active__link > span {
+    color: var(--c-purple);
+  }
+
+  .menu__item span {
+    width: fit-content;
+    opacity: 1;
+    flex: 0 0 auto;
+    visibility: visible;
+    background-color: transparent;
+    position: static;
+    height: auto;
+    padding: 0;
+    text-align: center;
+  }
+}
+
+@media all and (max-width: 500px) {
+  .menu__items__top {
+    gap: 0.8rem;
+  }
+}

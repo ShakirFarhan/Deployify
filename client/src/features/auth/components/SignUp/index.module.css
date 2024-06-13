@@ -1,0 +1,142 @@
+/* EmailEntry.tsx */
+.form__row1,
+.form__row2 {
+  width: 100%;
+}
+
+.form__row1 {
+  display: flex;
+  column-gap: 13px;
+}
+
+.form__row1 input {
+  width: 50%;
+  border-radius: 6px;
+  font-weight: 400;
+  outline: none;
+  font-size: 0.9rem;
+  letter-spacing: 0.34px;
+  padding: 0.6rem 0.7rem;
+  transition: color 0.3s ease, background-color 0.3s ease;
+  border: 1px solid #fff;
+  color: #fff;
+  background-color: transparent;
+}
+
+.form__row2 input,
+.password__entry input {
+  width: 99.5%;
+  border-radius: 6px;
+  font-weight: 400;
+  outline: none;
+  font-size: 0.9rem;
+  letter-spacing: 0.34px;
+  padding: 0.6rem 0.7rem;
+  transition: color 0.3s ease, background-color 0.3s ease;
+  border: 1px solid #fff;
+  color: #fff;
+  background-color: transparent;
+}
+
+.form__row1 input:focus,
+.form__row2 input:focus {
+  color: #232323;
+  background-color: #fff;
+}
+
+.continue__button,
+.verification__container button {
+  width: 100%;
+  color: #fff;
+  background: #3c3b89;
+  font-weight: 500;
+  font-size: 0.78rem;
+  letter-spacing: 0.9px;
+  padding: 0.55rem 0;
+  border-radius: 6px;
+  border: none;
+  outline: none;
+  transition: background 0.3s ease;
+  cursor: pointer;
+  margin: 1rem 0;
+}
+
+.continue__button:disabled,
+.verification__container button:disabled {
+  background-color: #4946c3a0;
+  color: #ffffff90;
+}
+
+.separator {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  justify-content: space-between;
+}
+.separator p {
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+.separator div {
+  width: 43%;
+  height: 1.3px;
+  background-color: #fff;
+}
+/* PasswordCreation.tsx */
+.password__entry {
+  position: relative;
+  margin: 1rem 0;
+}
+
+.password__entry p {
+  position: absolute;
+  top: -8px;
+  right: 5px;
+  font-size: 0.82rem;
+  letter-spacing: 0.3px;
+  text-decoration: underline;
+  font-weight: 700;
+  color: #423fe7;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Verfication.tsx */
+
+.verification__container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  row-gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.verification__container img {
+  width: 120px;
+  height: 100px;
+}
+
+.verification__container p {
+  color: #fff;
+  font-size: 0.77rem;
+  letter-spacing: 0.4px;
+  text-align: center;
+  width: 320px;
+}
+
+.warning {
+  font-size: 0.7rem;
+  color: #b088e8;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+}
+
+@media (pointer: fine) and (hover: hover) {
+  .continue__button:not(:disabled):is(:hover, :focus-visible),
+  .verification__container button:not(:disabled):is(:hover, :focus-visible) {
+    background: #423fe7;
+  }
+}

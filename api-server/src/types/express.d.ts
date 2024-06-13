@@ -3,7 +3,7 @@ import { User } from './user.type';
 declare global {
   namespace Express {
     interface Request {
-      user: User;
+      user: Pick<User, 'email' | 'id' | 'provider' | 'role'>;
     }
   }
 }

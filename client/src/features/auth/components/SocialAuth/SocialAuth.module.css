@@ -1,0 +1,39 @@
+.social__button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  column-gap: 0.8rem;
+  border: 0.8px solid #DDDDDD;
+  padding: 0.4rem 0.6rem;
+  background: transparent;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  color: #fff;
+  outline: none;
+  height: 2.6rem;
+  transition: color 0.3s ease, background-color 0.3s ease;
+}
+
+.social__button .nsm7Bb-HzV7m-LgbsSe {
+  background-color: black;
+}
+
+.social__button p {
+  font-size: 0.86rem;
+  font-weight: 500;
+  letter-spacing: 0.8px;
+  text-align: center;
+}
+
+.social__icon {
+  width: 20px;
+  height: 20px;
+}
+
+@media (pointer: fine) and (hover: hover) {
+  .social__button:is(:hover, :focus-visible) {
+    background-color: #FFFFFF;
+    color: #232323;
+  }
+}

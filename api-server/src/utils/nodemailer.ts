@@ -14,6 +14,7 @@ export const sendMail = async (email: string, token: string) => {
         pass: config.NODEMAILER.auth.pass,
       },
     });
+    console.log(config.NODEMAILER);
     await transport.sendMail({
       from: config.NODEMAILER.auth.user,
       to: email,
@@ -23,6 +24,7 @@ export const sendMail = async (email: string, token: string) => {
       <a href="${process.env.CLIENT_URL}/confirm-email?code=${token}">Confirm Email</a>
     `,
     });
+    console.log('MAIL SENT');
   } catch (error) {
     throw new ApiError(
       httpStatus.INTERNAL_SERVER_ERROR,
