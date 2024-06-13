@@ -5,7 +5,7 @@ export interface User {
   salt?: string;
   githubId?: string;
   fullName?: string;
-  verified: boolean;
+  verified?: boolean;
   githubUsername?: string;
   accountStatus?: string;
   role: string;
@@ -22,4 +22,11 @@ export interface JWTTokenDetails {
   tokenType?: 'access' | 'verification';
   iat: number;
   exp: number;
+}
+export interface GitHubUserPayload {
+  id: number;
+  login: string;
+  avatar_url: string;
+  email: string;
+  name: string;
 }

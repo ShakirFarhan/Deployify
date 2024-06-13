@@ -86,3 +86,14 @@ export const changePassword = async (req: Request, res: Response) => {
     ErrorHandler(error, res);
   }
 };
+
+export const githubAuth = async (req: Request, res: Response) => {
+  const { code } = req.body;
+  if (!code) return res.status(400).json({ error: 'provide code' });
+  try {
+    const response = await AuthService.githubOAuth(code);
+    res.status(200).json(response);
+  } catch (error: any) {
+    ErrorHandler(error, res);
+  }
+};
