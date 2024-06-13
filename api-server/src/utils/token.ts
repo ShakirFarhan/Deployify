@@ -14,6 +14,7 @@ export function verifyToken(token: string) {
   try {
     return JWT.verify(token, config.JWT_SECRET) as JWTTokenDetails;
   } catch (error) {
+    console.log(error);
     throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid token');
   }
 }

@@ -1,0 +1,82 @@
+.main__container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.root {
+  position: relative;
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  background-color: var(--primary-text);
+  overflow: hidden;
+}
+
+.children__container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 24%;
+  z-index: 100;
+}
+
+.rectangle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  min-width: 100%;
+  height: 1024px;
+  background-image:/* webpackIgnore: true */ url('assets/rectangle.png');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.rectangle1 {
+  position: relative;
+  left: 0;
+  top: 0;
+  min-width: 100%;
+  height: 1024px;
+  background-color: var(--c-purple);
+  backdrop-filter: blur(5.5px);
+}
+
+.ellipse1 {
+  position: absolute;
+  left: calc(50% - -0.5px);
+  top: 86px;
+  width: 1583px;
+  height: 1663px;
+  overflow: visible;
+  filter: blur(16px);
+  transform: translateX(-50%);
+}
+
+.ellipse2 {
+  position: absolute;
+  left: calc(50% - -0.5px);
+  top: 100px;
+  width: 1619px;
+  height: 1619px;
+  overflow: visible;
+  transform: translateX(-50%);
+  z-index: 0;
+}
+
+.icon {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 0;
+}
+
+.icon2 {
+  width: 100%;
+  height: 100%;
+}

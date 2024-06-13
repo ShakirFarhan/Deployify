@@ -7,6 +7,7 @@ import { encryptPassword } from '../utils/encryption';
 import { randomBytes } from 'crypto';
 export const register = async (req: Request, res: Response) => {
   const body = req.body;
+
   try {
     const message = await AuthService.register(body);
     res.status(200).json({ message });
@@ -17,6 +18,7 @@ export const register = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
   try {
+    console.log(req.body);
     const response = await AuthService.login(req.body);
     res.status(200).json(response);
   } catch (error: any) {
@@ -26,6 +28,7 @@ export const login = async (req: Request, res: Response) => {
 
 export const verifyToken = async (req: Request, res: Response) => {
   const { token } = req.query as { token: string };
+
   if (!token) return res.status(400).json({ error: 'Provide token' });
   try {
     const response = await AuthService.verifyEmail(token);
@@ -93,6 +96,19 @@ export const githubAuth = async (req: Request, res: Response) => {
   try {
     const response = await AuthService.githubOAuth(code);
     res.status(200).json(response);
+  } catch (error: any) {
+    ErrorHandler(error, res);
+  }
+};
+
+export const emailExist = async (req: Request, res: Response) => {
+  const { email } = req.query as { email: string };
+  console.log(req.query);
+  if (!email) return res.status(400).json({ error: 'Provide email' });
+  try {
+    const emailExist = await UserService.findByEmail(email);
+    if (emailExist) return res.status(200).json({ message: true });
+    res.status(200).json({ message: false });
   } catch (error: any) {
     ErrorHandler(error, res);
   }

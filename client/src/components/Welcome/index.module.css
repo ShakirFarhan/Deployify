@@ -1,0 +1,68 @@
+.logo__container {
+  background-color: transparent;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+  user-select: none;
+}
+.logo__container img {
+  width: 70px;
+  height: 70px;
+}
+.container {
+  width: 100%;
+}
+.welcome__section {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  margin: 0.7rem 0;
+}
+.welcome__section h2 {
+  font-size: 1.6rem;
+  color: #fff;
+  font-weight: 600;
+  text-align: center;
+}
+.welcome__section p {
+  color: #fff;
+  font-weight: 400;
+  letter-spacing: 0.9px;
+  font-size: 1rem;
+  margin-top: 6px;
+}
+
+.signin__section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  column-gap: 0.2rem;
+  margin-bottom: 1rem;
+}
+
+.signin__section p:nth-child(1) {
+  font-size: 0.9rem;
+  letter-spacing: 0.45px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.signin__section a {
+  color: #5528d7;
+  font-weight: 600;
+  font-size: 0.88rem;
+  text-decoration: none;
+  letter-spacing: normal;
+  padding: 0.24rem;
+  outline: none;
+  border-radius: 6px;
+  border: 0.6px solid transparent;
+  transition: border 0.3s ease;
+}
+
+@media (pointer: fine) and (hover :hover) {
+  .signin__section a:is(:hover, :focus-visible) {
+    border-color: #5528d7;
+  }
+}

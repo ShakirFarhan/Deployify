@@ -2,14 +2,17 @@ import express from 'express';
 import { RunTaskCommand } from '@aws-sdk/client-ecs';
 import slugify from 'unique-slug';
 import dotenv from 'dotenv';
+import cors from 'cors';
 import { config } from './config/production';
 import SocketService from './services/socket.service';
 import { ecsClient } from './services/aws/ecs.service';
 import authRoutes from './routes/auth.route';
 const socketService = new SocketService();
+
 dotenv.config();
 const app = express();
 const PORT = 8080;
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api-user/v1/auth', authRoutes);

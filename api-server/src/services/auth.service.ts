@@ -46,6 +46,7 @@ class AuthService {
       user: {
         id: emailExist.id,
         email: emailExist.email,
+        role: emailExist.role,
       },
     };
   }
@@ -80,6 +81,7 @@ class AuthService {
   }
   public static async verifyEmail(token: string) {
     const { id, tokenType } = verifyToken(token);
+    console.log(id, tokenType);
     if (tokenType !== 'verification' || !id) {
       throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid token');
     }
@@ -92,7 +94,20 @@ class AuthService {
       throw new ApiError(httpStatus.BAD_REQUEST, 'User already verified');
     }
     await UserService.update(user.id, { verified: true });
-    return { message: 'Email verified successfully' };
+
+    const accessToken = signToken({
+      email: user.email,
+      id: user.id,
+      tokenType: 'access',
+    });
+    return {
+      token: accessToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      },
+    };
   }
   // hit the below api to get the code
   // https://github.com/login/oauth/authorize?client_id=bb82fa7bb334e4529f06
