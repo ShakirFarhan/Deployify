@@ -85,7 +85,6 @@ const LoginForm = ({ onSubmit, isLoading }: LoginFormProps) => {
             <div></div>
           </div>
           <div className={styles.socials}>
-            <GoogleLogin />
             <GithubLogin />
           </div>
         </form>

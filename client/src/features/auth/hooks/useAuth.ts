@@ -52,6 +52,16 @@ export const authApi = createApi({
         url: `/verify?token=${token}`,
       }),
     }),
+    githubAuth: builder.mutation<
+      { token: string; user: Pick<UserPayload, 'email' | 'id' | 'role'> },
+      string
+    >({
+      query: (code) => ({
+        method: 'POST',
+        body: { code },
+        url: '/github',
+      }),
+    }),
   }),
 });
 export const {
@@ -59,4 +69,5 @@ export const {
   useRegisterMutation,
   useUserByEmailQuery,
   useVerifyEmailMutation,
+  useGithubAuthMutation,
 } = authApi;

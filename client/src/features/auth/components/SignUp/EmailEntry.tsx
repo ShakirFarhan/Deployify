@@ -85,7 +85,7 @@ const EmailEntry = ({
         <p>Or</p>
         <div></div>
       </div>
-      <GoogleLogin />
+
       <GithubLogin />
     </form>
   );
