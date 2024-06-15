@@ -39,22 +39,23 @@ function validateBuildScript(packageJsonPath) {
   ];
 
   const buildScript = packageJson.scripts.build.trim();
-  console.log(buildScript);
   if (!validBuildCommands.includes(buildScript)) {
     console.error(`Error: "${buildScript}" is not a recognized build script.`);
     process.exit(1);
   }
 }
-const APP_PROJECT_SLUG = process.env.APP_PROJECT_SLUG;
+const SUB_DOMAIN = process.env.SUB_DOMAIN;
+const BUILD_COMMAND = process.env.BUILD_COMMAND;
+const OUTPUT_DIR = process.env.OUTPUT_DIR;
 function publishLog(log) {
-  pub.publish(`LOGS:${APP_PROJECT_SLUG}`, JSON.stringify({ log }));
+  pub.publish(`LOGS:${SUB_DOMAIN}`, JSON.stringify({ log }));
 }
 
 async function init() {
   console.log('Started Executing....');
   const outDirPath = path.join(__dirname, 'output');
   validateBuildScript(path.join(outDirPath, 'package.json'));
-  const prc = exec(`cd ${outDirPath} && npm install && npm run build`);
+  const prc = exec(`cd ${outDirPath} && npm install && ${BUILD_COMMAND}`);
 
   prc.stdout.on('data', function (data) {
     console.log('LOG:', data.toString());
@@ -69,8 +70,10 @@ async function init() {
   prc.on('close', async function () {
     console.log('Build Completed');
     publishLog('Build Completed');
+
+    console.log(process.env);
     // What if the build command generated build folder
-    const distPath = path.join(outDirPath, 'dist');
+    const distPath = path.join(outDirPath, OUTPUT_DIR);
 
     const distContent = fs.readdirSync(distPath, {
       recursive: true,
@@ -84,7 +87,7 @@ async function init() {
       try {
         const command = new PutObjectCommand({
           Bucket: process.env.APP_AWS_BUCKET,
-          Key: `outputs/${APP_PROJECT_SLUG}/${file}`,
+          Key: `outputs/${SUB_DOMAIN}/${file}`,
           Body: fs.createReadStream(filePath),
           ContentType: mime.lookup(filePath),
         });
@@ -95,8 +98,8 @@ async function init() {
       }
       console.log('uploaded', filePath);
     }
-    publishLog(`${APP_PROJECT_SLUG} is live now`);
-    console.log(`${APP_PROJECT_SLUG} is live now`);
+    publishLog(`${SUB_DOMAIN} is live now`);
+    console.log(`${SUB_DOMAIN} is live now`);
     process.exit(0);
   });
 }

@@ -31,4 +31,5 @@ export const config = {
     CLIENT_ID: process.env.GITHUB_CLIENT_ID,
     CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET,
   },
+  BACKEND_URL: process.env.BACKEND_URL,
 };

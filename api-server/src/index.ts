@@ -7,6 +7,8 @@ import { config } from './config/production';
 import SocketService from './services/socket.service';
 import { ecsClient } from './services/aws/ecs.service';
 import authRoutes from './routes/auth.route';
+import projectRoutes from './routes/project.route';
+
 const socketService = new SocketService();
 
 dotenv.config();
@@ -16,6 +18,7 @@ app.use(cors({ origin: '*' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api-user/v1/auth', authRoutes);
+app.use('/api-user/v1/project', projectRoutes);
 app.post('/project', async (req, res) => {
   const { repoUrl } = req.body;
   if (!repoUrl)

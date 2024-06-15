@@ -22,8 +22,8 @@ class SocketService {
         socket.join(channel);
         socket.emit('message', `Joined ${channel}`);
       });
-
       sub.on('pmessage', (pattern, channel, message) => {
+        console.log(message);
         io.to(channel).emit('message', JSON.parse(message));
       });
     });
