@@ -7,6 +7,7 @@ import { config } from '../config/production';
 export const createProject = async (req: Request, res: Response) => {
   let { name, subDomain, buildCommand, outputDir, repoUrl, envData } = req.body;
   try {
+    // Creating a new project
     const project = await ProjectService.create({
       name,
       subDomain,
@@ -16,10 +17,9 @@ export const createProject = async (req: Request, res: Response) => {
       userId: req.user.id,
     });
     if (!project) res.status(400).json({ error: 'Error creating project' });
+    // If environment variables exist then add them to the project
     if (envData) {
-      console.log('ENVDATA');
-      console.log(envData);
-      const environments = await ProjectService.addEnviromentVariables({
+      await ProjectService.addEnviromentVariables({
         userId: req.user.id,
         projectId: project.id,
         enviromentVariables: envData,
@@ -31,13 +31,11 @@ export const createProject = async (req: Request, res: Response) => {
         };
       });
     }
-    await EcsService.runTask([
-      ...envData,
-      { name: 'BUILD_COMMAND', value: project.buildCommand },
-      { name: 'OUTPUT_DIR', value: project.outputDir },
-      { name: 'SUB_DOMAIN', value: project.subDomain },
-      { name: 'REPOSITORY_URL', value: project.repoUrl },
-    ]);
+    // Creating a deployment for the project
+    await ProjectService.createDeployment({
+      projectId: project.id,
+      userId: req.user.id,
+    });
 
     res.status(200).json({
       message: 'Project created successfully',

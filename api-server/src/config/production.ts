@@ -27,6 +27,11 @@ export const config = {
       pass: process.env.SMTP_PASS,
     },
   },
+  KAFKA: {
+    BROKER: process.env.APP_KAFKA_BROKER as unknown as string,
+    USERNAME: process.env.APP_KAFKA_USERNAME as string,
+    PASSWORD: process.env.APP_KAFKA_PASSWORD as string,
+  },
   GITHUB: {
     CLIENT_ID: process.env.GITHUB_CLIENT_ID,
     CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET,

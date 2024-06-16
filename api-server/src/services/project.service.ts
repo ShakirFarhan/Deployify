@@ -4,8 +4,22 @@ import ApiError from '../utils/apiError';
 import UserService from './user.service';
 import { prismaClient } from '../client';
 import { validateBuildCommand, validateEnvs } from '../utils/validation';
+import EcsService from './aws/ecs.service';
 
 class ProjectService {
+  private static async validateProjectAndUser(
+    projectId: string,
+    userId: string
+  ) {
+    const project = await prismaClient.project.findUnique({
+      where: {
+        id: projectId,
+        userId,
+      },
+    });
+    if (!project) throw new ApiError(httpStatus.NOT_FOUND, 'Project not found');
+    return project;
+  }
   public static async create(
     data: Pick<
       Project,
@@ -93,15 +107,11 @@ class ProjectService {
     enviromentVariables: EnvVariables[];
   }) {
     const { userId, projectId, name, enviromentVariables } = data;
-    console.log(name);
-    console.log(enviromentVariables);
     validateEnvs(enviromentVariables);
     if (!userId || !projectId)
       throw new ApiError(httpStatus.BAD_REQUEST, 'Missing Fields');
-    const project = await this.findById(projectId);
+    const project = await this.validateProjectAndUser(projectId, userId);
     if (!project) throw new ApiError(httpStatus.NOT_FOUND, 'Project not found');
-    if (project.userId !== userId)
-      throw new ApiError(httpStatus.FORBIDDEN, 'You are not authorized');
     return await prismaClient.project.update({
       where: {
         id: projectId,
@@ -124,18 +134,25 @@ class ProjectService {
 
   public static async getEnviromentVariables(
     projectId: string,
+
     userId: string
   ) {
-    const project = await this.findById(projectId);
-    if (!project) throw new ApiError(httpStatus.NOT_FOUND, 'project not found');
-    if (project.userId !== userId)
-      throw new ApiError(httpStatus.FORBIDDEN, 'You are not authorized');
-    await prismaClient.environment.findMany({
+    const project = await this.validateProjectAndUser(projectId, userId);
+    if (!project) throw new ApiError(httpStatus.NOT_FOUND, 'Project not found');
+    // TODO: Users can look for env's with name & projectId
+    return await prismaClient.environment.findFirst({
       where: {
         projectId,
       },
-      include: {
-        environmentVariables: true,
+      select: {
+        id: true,
+        environmentVariables: {
+          select: {
+            id: true,
+            key: true,
+            value: true,
+          },
+        },
       },
     });
   }
@@ -205,7 +222,7 @@ class ProjectService {
 
     const updateVariables = await Promise.all(
       variables.map(async (variable) => {
-        // Can add validation to check whether the environment exist before updating
+        // TODO: Can add validation to check whether the environment exist before updating
         return await prismaClient.environmentVariable.update({
           where: {
             id: variable.id,
@@ -218,6 +235,45 @@ class ProjectService {
       })
     );
     return updateVariables;
+  }
+
+  public static async createDeployment(data: {
+    projectId: string;
+    userId: string;
+  }) {
+    const { projectId, userId } = data;
+    if (!projectId || !userId)
+      throw new ApiError(httpStatus.BAD_REQUEST, 'Missing fields');
+    const project = await this.validateProjectAndUser(projectId, userId);
+    if (!project) throw new ApiError(httpStatus.NOT_FOUND, 'Project not found');
+
+    const deployment = await prismaClient.deployment.create({
+      data: {
+        project: {
+          connect: {
+            id: projectId,
+          },
+        },
+      },
+    });
+    // Checking if any environments exist for the project, if yes then deploy with those environments
+    const environments = await this.getEnviromentVariables(projectId, userId);
+    if (!environments || environments.environmentVariables.length === 0) return;
+    let envData = environments.environmentVariables.map((env: EnvVariables) => {
+      return {
+        name: env.key,
+        value: env.value,
+      };
+    });
+    await EcsService.runTask([
+      ...envData,
+      { name: 'BUILD_COMMAND', value: project.buildCommand },
+      { name: 'OUTPUT_DIR', value: project.outputDir },
+      { name: 'SUB_DOMAIN', value: project.subDomain },
+      { name: 'REPOSITORY_URL', value: project.repoUrl },
+      { name: 'PROJECT_ID', value: project.id },
+      { name: 'DEPLOYMENT_ID', value: deployment.id },
+    ]);
   }
 }
 

@@ -2,74 +2,43 @@ const path = require('path');
 const { exec } = require('child_process');
 const dotenv = require('dotenv');
 const fs = require('fs');
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
-
-const Redis = require('ioredis');
-const pub = new Redis(process.env.APP_REDIS_URL);
 dotenv.config();
 const mime = require('mime-types');
-const s3Client = new S3Client({
-  region: process.env.APP_AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.APP_AWS_ACCESS_KEY,
-    secretAccessKey: process.env.APP_AWS_SECRET_ACCESS_KEY,
-  },
-});
-function validateBuildScript(packageJsonPath) {
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-
-  if (!packageJson || !packageJson.scripts || !packageJson.scripts.build) {
-    console.error('Error: No "build" script found in package.json.');
-    process.exit(1);
-  }
-
-  const validBuildCommands = [
-    'npm run build',
-    'react-scripts build',
-    'next build',
-    'vite build',
-    'parcel build',
-    'webpack',
-    'gulp build',
-    'gatsby build',
-    'hugo',
-    'jekyll build',
-    'yarn build',
-    'vue-cli-service build',
-  ];
-
-  const buildScript = packageJson.scripts.build.trim();
-  if (!validBuildCommands.includes(buildScript)) {
-    console.error(`Error: "${buildScript}" is not a recognized build script.`);
-    process.exit(1);
-  }
-}
+const validateBuildScript = require('./utils/validation');
+const { uploadToS3 } = require('./services/s3');
+const { producer } = require('./services/kafka');
 const SUB_DOMAIN = process.env.SUB_DOMAIN;
 const BUILD_COMMAND = process.env.BUILD_COMMAND;
 const OUTPUT_DIR = process.env.OUTPUT_DIR;
-function publishLog(log) {
-  pub.publish(`LOGS:${SUB_DOMAIN}`, JSON.stringify({ log }));
+const DEPLOYMENT_ID = process.env.DEPLOYMENT_ID;
+
+async function publishLog(log) {
+  await producer.send({
+    topic: 'builder-logs',
+    messages: [{ key: 'log', value: JSON.stringify({ DEPLOYMENT_ID, log }) }],
+  });
 }
 
 async function init() {
+  await producer.connect();
   console.log('Started Executing....');
   const outDirPath = path.join(__dirname, 'output');
   validateBuildScript(path.join(outDirPath, 'package.json'));
   const prc = exec(`cd ${outDirPath} && npm install && ${BUILD_COMMAND}`);
 
-  prc.stdout.on('data', function (data) {
+  prc.stdout.on('data', async function (data) {
     console.log('LOG:', data.toString());
-    publishLog(data.toString());
+    await publishLog(data.toString());
   });
 
-  prc.stdout.on('error', function (data) {
+  prc.stdout.on('error', async function (data) {
     console.log('ERROR:', data.toString());
-    publishLog(data.toString());
+    await publishLog(data.toString());
   });
 
   prc.on('close', async function () {
     console.log('Build Completed');
-    publishLog('Build Completed');
+    await publishLog('Build Completed');
 
     console.log(process.env);
     // What if the build command generated build folder
@@ -83,22 +52,20 @@ async function init() {
       const filePath = path.join(distPath, file);
       if (fs.lstatSync(filePath).isDirectory()) continue;
       console.log('Uploading', filePath);
-      publishLog(`Uploading ${file}`);
+      await publishLog(`Uploading ${file}`);
       try {
-        const command = new PutObjectCommand({
-          Bucket: process.env.APP_AWS_BUCKET,
-          Key: `outputs/${SUB_DOMAIN}/${file}`,
-          Body: fs.createReadStream(filePath),
-          ContentType: mime.lookup(filePath),
-        });
-        await s3Client.send(command);
+        uploadToS3(
+          `outputs/${SUB_DOMAIN}/${file}`,
+          fs.createReadStream(filePath),
+          mime.lookup(filePath)
+        );
       } catch (error) {
-        publishLog(error.message);
+        await publishLog(error.message);
         process.exit(1);
       }
       console.log('uploaded', filePath);
     }
-    publishLog(`${SUB_DOMAIN} is live now`);
+    await publishLog(`${SUB_DOMAIN} is live now`);
     console.log(`${SUB_DOMAIN} is live now`);
     process.exit(0);
   });
