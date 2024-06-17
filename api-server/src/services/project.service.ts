@@ -5,7 +5,7 @@ import UserService from './user.service';
 import { prismaClient } from '../client';
 import { validateBuildCommand, validateEnvs } from '../utils/validation';
 import EcsService from './aws/ecs.service';
-
+import slugify from 'slugify';
 class ProjectService {
   private static async validateProjectAndUser(
     projectId: string,
@@ -30,6 +30,7 @@ class ProjectService {
     if (!name || !subDomain || !userId || !repoUrl) {
       throw new ApiError(httpStatus.BAD_REQUEST, 'Missing Fields');
     }
+
     const userExist = await UserService.findById(userId);
     if (!userExist) throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
 
@@ -41,7 +42,7 @@ class ProjectService {
     const project = await prismaClient.project.create({
       data: {
         name,
-        subDomain,
+        subDomain: slugify(subDomain, { lower: true }),
         userId,
         buildCommand,
         outputDir,

@@ -22,8 +22,13 @@ async function publishLog(log) {
 async function init() {
   await producer.connect();
   console.log('Started Executing....');
+  await publishLog('Starting deployment process...');
   const outDirPath = path.join(__dirname, 'output');
+  console.log('Validating build script...');
+  await publishLog('Validating build script...');
   validateBuildScript(path.join(outDirPath, 'package.json'));
+  console.log('Installing dependencies and running build command...');
+  await publishLog('Installing dependencies and running build command...');
   const prc = exec(`cd ${outDirPath} && npm install && ${BUILD_COMMAND}`);
 
   prc.stdout.on('data', async function (data) {
@@ -36,12 +41,18 @@ async function init() {
     await publishLog(data.toString());
   });
 
-  prc.on('close', async function () {
-    console.log('Build Completed');
-    await publishLog('Build Completed');
+  prc.on('close', async function (code) {
+    if (code === 0) {
+      console.log('Build completed successfully');
+      await publishLog('Build completed successfully.');
+    } else {
+      console.log('Build failed');
+      await publishLog('Build failed.');
+      process.exit(1);
+    }
 
-    console.log(process.env);
-    // What if the build command generated build folder
+    console.log('Reading build output directory...');
+    await publishLog('Reading build output directory...');
     const distPath = path.join(outDirPath, OUTPUT_DIR);
 
     const distContent = fs.readdirSync(distPath, {
@@ -52,7 +63,7 @@ async function init() {
       const filePath = path.join(distPath, file);
       if (fs.lstatSync(filePath).isDirectory()) continue;
       console.log('Uploading', filePath);
-      await publishLog(`Uploading ${file}`);
+      await publishLog(`Uploading ${file}...`);
       try {
         uploadToS3(
           `outputs/${SUB_DOMAIN}/${file}`,
@@ -60,10 +71,10 @@ async function init() {
           mime.lookup(filePath)
         );
       } catch (error) {
-        await publishLog(error.message);
+        console.log(`Upload failed: ${error.message}`);
+        await publishLog(`Upload failed: ${error.message}`);
         process.exit(1);
       }
-      console.log('uploaded', filePath);
     }
     await publishLog(`${SUB_DOMAIN} is live now`);
     console.log(`${SUB_DOMAIN} is live now`);
