@@ -6,7 +6,7 @@ export interface User {
   githubAccessToken?: string | null;
   fullName?: string;
   verified?: boolean;
-  githubUsername?: string;
+  githubUsername?: string | null;
   accountStatus?: string;
   role: string;
   provider: 'local' | 'github' | 'google';

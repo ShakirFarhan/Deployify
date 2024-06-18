@@ -37,4 +37,8 @@ export const config = {
     CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET,
   },
   BACKEND_URL: process.env.BACKEND_URL,
+  WEBHOOK: {
+    URL: process.env.WEBHOOK_URL,
+    SECRET: process.env.WEBHOOK_SECRET,
+  },
 };

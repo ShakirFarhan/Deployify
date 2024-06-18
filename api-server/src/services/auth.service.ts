@@ -8,6 +8,7 @@ import { randomBytes, randomUUID } from 'crypto';
 import { config } from '../config/production';
 import axios from 'axios';
 import qs from 'qs';
+import { prismaClient } from '../client';
 class AuthService {
   public static async login(data: Pick<User, 'email' | 'password'>) {
     const { email, password } = data;
@@ -118,8 +119,9 @@ class AuthService {
       client_secret: config.GITHUB.CLIENT_SECRET,
       code,
     };
-    const query = qs.stringify(options);
 
+    const query = qs.stringify(options);
+    console.log(query);
     const { data } = await axios.get(`${rootUrl}?${query}`, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -153,6 +155,8 @@ class AuthService {
         access_token: string;
       };
 
+      console.log(access_token);
+
       const { email, avatar_url, login, name, id } = (await this.getGithubUser(
         access_token
       )) as GitHubUserPayload;
@@ -177,12 +181,26 @@ class AuthService {
             `Login using ${userExists.provider}`
           );
         }
-        user = userExists;
+        user = await prismaClient.user.update({
+          where: {
+            id: userExists.id,
+          },
+          data: {
+            githubAccessToken: access_token,
+          },
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            verified: true,
+            githubUsername: true,
+          },
+        });
       }
 
       const token = signToken(
         { id: user.id, email: user.email, tokenType: 'access' },
-        '20'
+        '20d'
       );
       return {
         token,

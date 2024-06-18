@@ -4,6 +4,7 @@ import ProjectService from '../services/project.service';
 import { EnvVariables } from '../types/project.types';
 import EcsService from '../services/aws/ecs.service';
 import { config } from '../config/production';
+import GithubService from '../services/github.service';
 export const createProject = async (req: Request, res: Response) => {
   let { name, subDomain, buildCommand, outputDir, repoUrl, envData } = req.body;
   try {
@@ -31,14 +32,16 @@ export const createProject = async (req: Request, res: Response) => {
         };
       });
     }
+
     // Creating a deployment for the project
-    await ProjectService.createDeployment({
+    const deployment = await ProjectService.createDeployment({
       projectId: project.id,
       userId: req.user.id,
     });
 
     res.status(200).json({
       message: 'Project created successfully',
+      deploymentId: deployment?.id,
       url: `${project.subDomain}.${config.BACKEND_URL}`,
     });
   } catch (error: any) {

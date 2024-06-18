@@ -5,6 +5,7 @@ export interface Project {
   repoUrl: string;
   userId: string;
   buildCommand: string;
+  deploymentMethod?: 'git' | 'upload_link';
   outputDir: string;
   createdAt: string;
   updatedAt: string;

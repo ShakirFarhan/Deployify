@@ -23,10 +23,24 @@ class ProjectService {
   public static async create(
     data: Pick<
       Project,
-      'name' | 'subDomain' | 'userId' | 'buildCommand' | 'outputDir' | 'repoUrl'
+      | 'name'
+      | 'subDomain'
+      | 'userId'
+      | 'buildCommand'
+      | 'outputDir'
+      | 'repoUrl'
+      | 'deploymentMethod'
     >
   ) {
-    const { name, subDomain, userId, buildCommand, repoUrl, outputDir } = data;
+    const {
+      name,
+      subDomain,
+      userId,
+      buildCommand,
+      repoUrl,
+      outputDir,
+      deploymentMethod,
+    } = data;
     if (!name || !subDomain || !userId || !repoUrl) {
       throw new ApiError(httpStatus.BAD_REQUEST, 'Missing Fields');
     }
@@ -47,6 +61,7 @@ class ProjectService {
         buildCommand,
         outputDir,
         repoUrl,
+        deploymentMethod,
       },
     });
     return project;
@@ -100,7 +115,13 @@ class ProjectService {
       },
     });
   }
-
+  public static async findByUrl(url: string) {
+    return await prismaClient.project.findFirst({
+      where: {
+        repoUrl: url,
+      },
+    });
+  }
   public static async addEnviromentVariables(data: {
     userId: string;
     projectId: string;
@@ -243,9 +264,11 @@ class ProjectService {
     userId: string;
   }) {
     const { projectId, userId } = data;
+
     if (!projectId || !userId)
       throw new ApiError(httpStatus.BAD_REQUEST, 'Missing fields');
     const project = await this.validateProjectAndUser(projectId, userId);
+
     if (!project) throw new ApiError(httpStatus.NOT_FOUND, 'Project not found');
 
     const deployment = await prismaClient.deployment.create({
@@ -257,9 +280,20 @@ class ProjectService {
         },
       },
     });
+
     // Checking if any environments exist for the project, if yes then deploy with those environments
     const environments = await this.getEnviromentVariables(projectId, userId);
-    if (!environments || environments.environmentVariables.length === 0) return;
+    if (!environments || environments.environmentVariables.length === 0) {
+      await EcsService.runTask([
+        { name: 'BUILD_COMMAND', value: project.buildCommand },
+        { name: 'OUTPUT_DIR', value: project.outputDir },
+        { name: 'SUB_DOMAIN', value: project.subDomain },
+        { name: 'REPOSITORY_URL', value: project.repoUrl },
+        { name: 'PROJECT_ID', value: project.id },
+        { name: 'DEPLOYMENT_ID', value: deployment.id },
+      ]);
+      return deployment;
+    }
     let envData = environments.environmentVariables.map((env: EnvVariables) => {
       return {
         name: env.key,
@@ -275,6 +309,7 @@ class ProjectService {
       { name: 'PROJECT_ID', value: project.id },
       { name: 'DEPLOYMENT_ID', value: deployment.id },
     ]);
+    return deployment;
   }
 
   public static async updateDeployment(

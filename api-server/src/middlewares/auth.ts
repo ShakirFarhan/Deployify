@@ -14,6 +14,7 @@ export const isUserAuthenticated = async (
     if (!decodedToken) {
       return res.status(401).json({ message: 'Invalid Token' });
     }
+    console.log(decodedToken);
     const user = await prismaClient.user.findUnique({
       where: {
         id: decodedToken.id,
@@ -25,17 +26,18 @@ export const isUserAuthenticated = async (
         role: true,
         verified: true,
         githubAccessToken: true,
+        githubUsername: true,
       },
     });
     if (!user) return res.status(401).json({ error: 'Invalid User' });
     if (!user.verified)
       return res.status(401).json({ error: 'User not verified' });
 
-    console.log('USER');
-    console.log(user);
     req.user = user;
+    console.log(req.user);
     next();
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: 'Invalid User' });
   }
 };
