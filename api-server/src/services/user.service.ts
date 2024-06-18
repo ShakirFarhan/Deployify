@@ -14,7 +14,7 @@ class UserService {
         id: true,
         email: true,
         fullName: true,
-        githubId: true,
+        githubAccessToken: true,
         githubUsername: true,
         verified: true,
       },

@@ -25,8 +25,7 @@ class AuthService {
     const hashedPassword = encryptPassword(password, emailExist.salt as string);
     if (emailExist.password !== hashedPassword)
       throw new ApiError(httpStatus.BAD_REQUEST, 'Incorrect Password');
-    console.log('HERE');
-    console.log(emailExist.verified);
+
     if (!emailExist.verified) {
       // return Send verification token to mail
       await sendVerificationToken({
@@ -81,7 +80,7 @@ class AuthService {
   }
   public static async verifyEmail(token: string) {
     const { id, tokenType } = verifyToken(token);
-    console.log(id, tokenType);
+
     if (tokenType !== 'verification' || !id) {
       throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid token');
     }
@@ -113,14 +112,14 @@ class AuthService {
   // https://github.com/login/oauth/authorize?client_id=bb82fa7bb334e4529f06
   private static async getGithubOAuthToken(code: string) {
     const rootUrl = 'https://github.com/login/oauth/access_token';
-    console.log(config.GITHUB);
+
     const options = {
       client_id: config.GITHUB.CLIENT_ID,
       client_secret: config.GITHUB.CLIENT_SECRET,
       code,
     };
     const query = qs.stringify(options);
-    console.log(query);
+
     const { data } = await axios.get(`${rootUrl}?${query}`, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -128,7 +127,6 @@ class AuthService {
     });
 
     const decoded = qs.parse(data) as { access_token: string };
-    console.log(decoded);
 
     return decoded;
   }
@@ -139,7 +137,6 @@ class AuthService {
         Authorization: `Bearer ${access_token}`,
       },
     });
-    console.log(data);
     return data;
   }
   // Github OAuth/Authentication
@@ -159,7 +156,6 @@ class AuthService {
       const { email, avatar_url, login, name, id } = (await this.getGithubUser(
         access_token
       )) as GitHubUserPayload;
-      console.log(email);
       const userExists = await UserService.findByEmail(email);
 
       let user: any;
@@ -171,7 +167,7 @@ class AuthService {
           password: randomUUID(),
           provider: 'github',
           verified: true,
-          githubId: id.toString(),
+          githubAccessToken: access_token,
           // profile Photo
         });
       } else {
@@ -186,7 +182,7 @@ class AuthService {
 
       const token = signToken(
         { id: user.id, email: user.email, tokenType: 'access' },
-        '20d'
+        '20'
       );
       return {
         token,

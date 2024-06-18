@@ -32,7 +32,7 @@ model User{
   email String @unique 
   password String @unique
   salt String?
-  githubId String? @map("github_id")
+  githubAccessToken String? @map("github_access_token")
   fullName String? @map("full_name")
   verified Boolean @default(false)
   githubUsername String? @map("github_username")

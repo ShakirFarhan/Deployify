@@ -24,11 +24,15 @@ export const isUserAuthenticated = async (
         provider: true,
         role: true,
         verified: true,
+        githubAccessToken: true,
       },
     });
     if (!user) return res.status(401).json({ error: 'Invalid User' });
     if (!user.verified)
       return res.status(401).json({ error: 'User not verified' });
+
+    console.log('USER');
+    console.log(user);
     req.user = user;
     next();
   } catch (error) {

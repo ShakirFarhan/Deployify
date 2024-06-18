@@ -3,7 +3,7 @@ export interface User {
   password: string;
   id: string;
   salt?: string;
-  githubId?: string;
+  githubAccessToken?: string | null;
   fullName?: string;
   verified?: boolean;
   githubUsername?: string;
