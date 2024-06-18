@@ -1,7 +1,12 @@
 import express from 'express';
 import { isUserAuthenticated } from '../middlewares/auth';
-import { createProject } from '../controllers/project.controller';
+import {
+  createProject,
+  deployProject,
+  getLogs,
+} from '../controllers/project.controller';
 const router = express.Router();
-
 router.post('/create', isUserAuthenticated, createProject);
+router.post('/:projectId/deploy', isUserAuthenticated, deployProject);
+router.get('/:deploymentId/logs', isUserAuthenticated, getLogs);
 export default router;

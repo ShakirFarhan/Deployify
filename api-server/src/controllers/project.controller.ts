@@ -45,3 +45,28 @@ export const createProject = async (req: Request, res: Response) => {
     ErrorHandler(error, res);
   }
 };
+export const getLogs = async (req: Request, res: Response) => {
+  const { deploymentId } = req.params;
+  try {
+    const logs = await ProjectService.getLogs(deploymentId);
+    res.status(200).json({ logs: logs });
+  } catch (error: any) {
+    ErrorHandler(error, res);
+  }
+};
+
+export const deployProject = async (req: Request, res: Response) => {
+  const { projectId } = req.params;
+  try {
+    await ProjectService.createDeployment({
+      projectId: projectId,
+      userId: req.user.id,
+    });
+
+    res.status(200).json({
+      message: 'Deployment started successfully',
+    });
+  } catch (error: any) {
+    ErrorHandler(error, res);
+  }
+};

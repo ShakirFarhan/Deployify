@@ -23,9 +23,12 @@ export const isUserAuthenticated = async (
         email: true,
         provider: true,
         role: true,
+        verified: true,
       },
     });
     if (!user) return res.status(401).json({ error: 'Invalid User' });
+    if (!user.verified)
+      return res.status(401).json({ error: 'User not verified' });
     req.user = user;
     next();
   } catch (error) {

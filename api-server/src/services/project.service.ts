@@ -276,6 +276,57 @@ class ProjectService {
       { name: 'DEPLOYMENT_ID', value: deployment.id },
     ]);
   }
+
+  public static async updateDeployment(
+    id: string,
+    data: {
+      status?:
+        | 'queued'
+        | 'starting'
+        | 'building'
+        | 'uploading'
+        | 'deployed'
+        | 'cancelled'
+        | 'failed';
+    }
+  ) {
+    return await prismaClient.deployment.update({
+      where: {
+        id,
+      },
+      data: {
+        status: data.status,
+      },
+    });
+  }
+
+  public static async createLog(deploymentId: string, log: string) {
+    return await prismaClient.log.create({
+      data: {
+        deployment: {
+          connect: {
+            id: deploymentId,
+          },
+        },
+        log,
+      },
+    });
+  }
+
+  public static async getLogs(deploymentId: string) {
+    if (!deploymentId)
+      throw new ApiError(httpStatus.BAD_REQUEST, 'provide deployment id');
+    return await prismaClient.log.findMany({
+      where: {
+        deployment: {
+          id: deploymentId,
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
 }
 
 export default ProjectService;

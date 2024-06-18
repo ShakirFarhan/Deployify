@@ -1,7 +1,9 @@
-import { Kafka } from 'kafkajs';
+import { Kafka, Offsets } from 'kafkajs';
 import { config } from '../config/production';
 import fs from 'fs';
 import path from 'path';
+import ProjectService from './project.service';
+import { prismaClient } from '../client';
 export const kafkaClient = new Kafka({
   clientId: `API-SERVER`,
   brokers: [config.KAFKA.BROKER],
@@ -16,25 +18,57 @@ export const kafkaClient = new Kafka({
 });
 
 export async function logsConsumer() {
-  console.log(__dirname);
+
   const consumer = kafkaClient.consumer({ groupId: 'deployment-logs' });
   await consumer.connect();
   await consumer.subscribe({ topic: 'builder-logs' });
   await consumer.run({
+    autoCommit: false,
     eachBatch: async function ({
       batch,
       heartbeat,
       commitOffsetsIfNecessary,
       resolveOffset,
+      pause,
     }) {
       const messages = batch.messages;
       for (const message of messages) {
-        console.log(message);
         if (!message.value) return;
 
-        const data = JSON.parse(message.value.toString());
-        // Insert into DB
-        console.log(data);
+        const { DEPLOYMENT_ID, log, status } = JSON.parse(
+          message.value.toString()
+        ) as {
+          DEPLOYMENT_ID: string;
+          log: string;
+          status?: any;
+        };
+
+        try {
+          if (status) {
+            await ProjectService.updateDeployment(DEPLOYMENT_ID, { status });
+          }
+          await ProjectService.createLog(DEPLOYMENT_ID, log);
+          resolveOffset(message.offset);
+          await commitOffsetsIfNecessary({
+            topics: [
+              {
+                topic: batch.topic,
+                partitions: [
+                  {
+                    partition: batch.partition,
+                    offset: message.offset,
+                  },
+                ],
+              },
+            ],
+          });
+          await heartbeat();
+        } catch (error) {
+          pause();
+          setTimeout(() => {
+            consumer.resume([{ topic: 'builder-logs' }]);
+          }, 60 * 1000);
+        }
       }
     },
   });
