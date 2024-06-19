@@ -2,7 +2,7 @@ export interface Project {
   id: string;
   name: string;
   subDomain: string;
-  repoUrl: string;
+  repo: string;
   userId: string;
   buildCommand: string;
   deploymentMethod?: 'git' | 'upload_link';

@@ -16,7 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api-user/v1/auth', authRoutes);
 app.use('/api-user/v1/project', projectRoutes);
 app.use('/api-user/v1/github', githubRoutes);
-logsConsumer();
+// logsConsumer();
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

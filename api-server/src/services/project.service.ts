@@ -6,6 +6,7 @@ import { prismaClient } from '../client';
 import { validateBuildCommand, validateEnvs } from '../utils/validation';
 import EcsService from './aws/ecs.service';
 import slugify from 'slugify';
+import { User } from '../types/user.type';
 class ProjectService {
   private static async validateProjectAndUser(
     projectId: string,
@@ -28,7 +29,7 @@ class ProjectService {
       | 'userId'
       | 'buildCommand'
       | 'outputDir'
-      | 'repoUrl'
+      | 'repo'
       | 'deploymentMethod'
     >
   ) {
@@ -37,20 +38,20 @@ class ProjectService {
       subDomain,
       userId,
       buildCommand,
-      repoUrl,
+      repo,
       outputDir,
       deploymentMethod,
     } = data;
-    if (!name || !subDomain || !userId || !repoUrl) {
+    if (!name || !subDomain || !userId || !repo || !deploymentMethod) {
       throw new ApiError(httpStatus.BAD_REQUEST, 'Missing Fields');
     }
 
     const userExist = await UserService.findById(userId);
     if (!userExist) throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
-
     const subDomainExist = await this.findBySubDomain(subDomain);
     if (subDomainExist)
       throw new ApiError(httpStatus.CONFLICT, 'sub domain already exist');
+
     validateBuildCommand(buildCommand);
 
     const project = await prismaClient.project.create({
@@ -60,7 +61,7 @@ class ProjectService {
         userId,
         buildCommand,
         outputDir,
-        repoUrl,
+        repo,
         deploymentMethod,
       },
     });
@@ -118,7 +119,7 @@ class ProjectService {
   public static async findByUrl(url: string) {
     return await prismaClient.project.findFirst({
       where: {
-        repoUrl: url,
+        repo: url,
       },
     });
   }
@@ -261,16 +262,14 @@ class ProjectService {
 
   public static async createDeployment(data: {
     projectId: string;
-    userId: string;
+    user: Pick<User, 'id' | 'githubUsername' | 'githubAccessToken'>;
   }) {
-    const { projectId, userId } = data;
-
-    if (!projectId || !userId)
+    const { projectId, user } = data;
+    if (!projectId || !user)
       throw new ApiError(httpStatus.BAD_REQUEST, 'Missing fields');
-    const project = await this.validateProjectAndUser(projectId, userId);
+    const project = await this.validateProjectAndUser(projectId, user.id);
 
     if (!project) throw new ApiError(httpStatus.NOT_FOUND, 'Project not found');
-
     const deployment = await prismaClient.deployment.create({
       data: {
         project: {
@@ -282,15 +281,16 @@ class ProjectService {
     });
 
     // Checking if any environments exist for the project, if yes then deploy with those environments
-    const environments = await this.getEnviromentVariables(projectId, userId);
+    const environments = await this.getEnviromentVariables(projectId, user.id);
     if (!environments || environments.environmentVariables.length === 0) {
       await EcsService.runTask([
         { name: 'BUILD_COMMAND', value: project.buildCommand },
         { name: 'OUTPUT_DIR', value: project.outputDir },
         { name: 'SUB_DOMAIN', value: project.subDomain },
-        { name: 'REPOSITORY_URL', value: project.repoUrl },
+        { name: 'REPOSITORY_URL', value: project.repo },
         { name: 'PROJECT_ID', value: project.id },
         { name: 'DEPLOYMENT_ID', value: deployment.id },
+        // user.githubUsername
       ]);
       return deployment;
     }
@@ -305,7 +305,7 @@ class ProjectService {
       { name: 'BUILD_COMMAND', value: project.buildCommand },
       { name: 'OUTPUT_DIR', value: project.outputDir },
       { name: 'SUB_DOMAIN', value: project.subDomain },
-      { name: 'REPOSITORY_URL', value: project.repoUrl },
+      { name: 'REPOSITORY_URL', value: project.repo },
       { name: 'PROJECT_ID', value: project.id },
       { name: 'DEPLOYMENT_ID', value: deployment.id },
     ]);

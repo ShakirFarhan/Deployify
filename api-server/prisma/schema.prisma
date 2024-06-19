@@ -54,7 +54,7 @@ model Project{
   id String @id @default(uuid())
   name String
   subDomain String @unique @map("sub_domain")
-  repoUrl String @map("repo_url")
+  repo String @map("repo_url")
   userId String @map("user_id")
   buildCommand String @default("npm run build") @map("build_command")
   deploymentMethod DeploymentMethod @map("deployment_method") @default(upload_link)

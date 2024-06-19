@@ -117,11 +117,12 @@ class AuthService {
     const options = {
       client_id: config.GITHUB.CLIENT_ID,
       client_secret: config.GITHUB.CLIENT_SECRET,
+
       code,
     };
 
     const query = qs.stringify(options);
-    console.log(query);
+
     const { data } = await axios.get(`${rootUrl}?${query}`, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -154,8 +155,6 @@ class AuthService {
       const { access_token } = (await this.getGithubOAuthToken(code)) as {
         access_token: string;
       };
-
-      console.log(access_token);
 
       const { email, avatar_url, login, name, id } = (await this.getGithubUser(
         access_token

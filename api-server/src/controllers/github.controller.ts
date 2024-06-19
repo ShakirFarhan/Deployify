@@ -65,17 +65,25 @@ export const webhookHandler = async (req: Request, res: Response) => {
   try {
     const projects = await prismaClient.project.findMany({
       where: {
-        repoUrl,
+        repo: repoUrl,
         user: {
           githubUsername: username,
         },
       },
+      include: {
+        user: {
+          select: {
+            githubAccessToken: true,
+          },
+        },
+      },
     });
     if (!projects || projects.length === 0) return;
+
     for (const project of projects) {
       await ProjectService.createDeployment({
         projectId: project.id,
-        userId: project.userId,
+        user: { id: project.userId, githubUsername: username },
       });
     }
   } catch (error: any) {

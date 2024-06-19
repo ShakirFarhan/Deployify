@@ -2,11 +2,17 @@ import { Request, Response } from 'express';
 import { ErrorHandler } from '../utils/apiError';
 import ProjectService from '../services/project.service';
 import { EnvVariables } from '../types/project.types';
-import EcsService from '../services/aws/ecs.service';
 import { config } from '../config/production';
-import GithubService from '../services/github.service';
 export const createProject = async (req: Request, res: Response) => {
-  let { name, subDomain, buildCommand, outputDir, repoUrl, envData } = req.body;
+  let {
+    name,
+    subDomain,
+    buildCommand,
+    outputDir,
+    repo,
+    envData,
+    deploymentMethod,
+  } = req.body;
   try {
     // Creating a new project
     const project = await ProjectService.create({
@@ -14,8 +20,9 @@ export const createProject = async (req: Request, res: Response) => {
       subDomain,
       buildCommand,
       outputDir,
-      repoUrl,
+      repo,
       userId: req.user.id,
+      deploymentMethod,
     });
     if (!project) res.status(400).json({ error: 'Error creating project' });
     // If environment variables exist then add them to the project
@@ -36,7 +43,7 @@ export const createProject = async (req: Request, res: Response) => {
     // Creating a deployment for the project
     const deployment = await ProjectService.createDeployment({
       projectId: project.id,
-      userId: req.user.id,
+      user: req.user,
     });
 
     res.status(200).json({
@@ -63,7 +70,7 @@ export const deployProject = async (req: Request, res: Response) => {
   try {
     await ProjectService.createDeployment({
       projectId: projectId,
-      userId: req.user.id,
+      user: req.user,
     });
 
     res.status(200).json({
