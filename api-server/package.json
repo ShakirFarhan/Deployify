@@ -2,6 +2,7 @@
   "name": "api-server",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "commonjs",
   "scripts": {
     "start": "node dist/index.js",
     "dev": "tsc-watch --onSuccess \"npm start\"",
@@ -24,6 +25,8 @@
   },
   "dependencies": {
     "@aws-sdk/client-ecs": "^3.592.0",
+    "@octokit/auth-app": "^7.1.0",
+    "@octokit/rest": "^20.1.1",
     "@prisma/client": "^5.15.0",
     "axios": "^1.7.2",
     "cors": "^2.8.5",

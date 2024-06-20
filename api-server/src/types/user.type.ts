@@ -4,9 +4,11 @@ export interface User {
   id: string;
   salt?: string;
   githubAccessToken?: string | null;
+  githubAppToken?: string;
+  installationId?: string | null;
   fullName?: string;
   verified?: boolean;
-  githubUsername?: string;
+  githubUsername?: string | null;
   accountStatus?: string;
   role: string;
   provider: 'local' | 'github' | 'google';

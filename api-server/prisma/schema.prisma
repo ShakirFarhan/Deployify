@@ -33,6 +33,8 @@ model User{
   password String @unique
   salt String?
   githubAccessToken String? @map("github_access_token")
+  githubAppToken String? @map("github_app_token")
+  installationId String? @map("installation_id")
   fullName String? @map("full_name")
   verified Boolean @default(false)
   githubUsername String? @map("github_username")
@@ -46,13 +48,18 @@ model User{
 
 }
 
+enum DeploymentMethod {
+  git
+  upload_link
+}
 model Project{
   id String @id @default(uuid())
   name String
   subDomain String @unique @map("sub_domain")
-  repoUrl String @map("repo_url")
+  repo String
   userId String @map("user_id")
   buildCommand String @default("npm run build") @map("build_command")
+  deploymentMethod DeploymentMethod @map("deployment_method") @default(upload_link)
   outputDir String @default("build") @map("output_dir")
   user User @relation(fields: [userId],references: [id])
   createdAt DateTime @default(now()) @map("created_at")
