@@ -4,17 +4,17 @@ import { ErrorHandler } from '../utils/apiError';
 import { prismaClient } from '../client';
 import ProjectService from '../services/project.service';
 export const fetchRepositories = async (req: Request, res: Response) => {
-  if (req.user.provider !== 'github') {
-    return res.status(400).json({ error: 'You are not a github user' });
-  }
-  try {
-    const repositories = await GithubService.repositories(
-      req.user.githubAccessToken as string
-    );
-    res.status(200).json({ repositories });
-  } catch (error: any) {
-    ErrorHandler(error, res);
-  }
+  // if (req.user.provider !== 'github') {
+  //   return res.status(400).json({ error: 'You are not a github user' });
+  // }
+  // try {
+  //   const repositories = await GithubService.repositories(
+  //     req.user.githubAccessToken as string
+  //   );
+  //   res.status(200).json({ repositories });
+  // } catch (error: any) {
+  //   ErrorHandler(error, res);
+  // }
 };
 
 export const setupWebhook = async (req: Request, res: Response) => {
@@ -83,7 +83,11 @@ export const webhookHandler = async (req: Request, res: Response) => {
     for (const project of projects) {
       await ProjectService.createDeployment({
         projectId: project.id,
-        user: { id: project.userId, githubUsername: username },
+        user: {
+          id: req.user.id,
+          githubUsername: req.user.githubUsername as string,
+          githubAccessToken: req.user.githubAccessToken as string,
+        },
       });
     }
   } catch (error: any) {

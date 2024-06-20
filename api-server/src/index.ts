@@ -6,6 +6,7 @@ import projectRoutes from './routes/project.route';
 import githubRoutes from './routes/github.route';
 
 import { logsConsumer } from './services/kafka.service';
+import { config } from './config/production';
 
 dotenv.config();
 const app = express();
@@ -17,6 +18,7 @@ app.use('/api-user/v1/auth', authRoutes);
 app.use('/api-user/v1/project', projectRoutes);
 app.use('/api-user/v1/github', githubRoutes);
 // logsConsumer();
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

@@ -5,12 +5,13 @@ declare global {
     interface Request {
       user: Pick<
         User,
-        | 'email'
         | 'id'
         | 'provider'
         | 'githubAccessToken'
         | 'role'
         | 'githubUsername'
+        | 'githubAppToken'
+        | 'installationId'
       >;
     }
   }

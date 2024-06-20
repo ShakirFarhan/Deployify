@@ -21,12 +21,12 @@ export const isUserAuthenticated = async (
       },
       select: {
         id: true,
-        email: true,
         provider: true,
         role: true,
         verified: true,
         githubAccessToken: true,
         githubUsername: true,
+        installationId: true,
       },
     });
     if (!user) return res.status(401).json({ error: 'Invalid User' });

@@ -4,6 +4,8 @@ export interface User {
   id: string;
   salt?: string;
   githubAccessToken?: string | null;
+  githubAppToken?: string;
+  installationId?: string | null;
   fullName?: string;
   verified?: boolean;
   githubUsername?: string | null;

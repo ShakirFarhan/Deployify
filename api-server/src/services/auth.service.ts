@@ -113,23 +113,25 @@ class AuthService {
   // https://github.com/login/oauth/authorize?client_id=bb82fa7bb334e4529f06
   private static async getGithubOAuthToken(code: string) {
     const rootUrl = 'https://github.com/login/oauth/access_token';
-
+    console.log(config.GITHUB);
     const options = {
       client_id: config.GITHUB.CLIENT_ID,
       client_secret: config.GITHUB.CLIENT_SECRET,
-
       code,
     };
 
     const query = qs.stringify(options);
 
-    const { data } = await axios.get(`${rootUrl}?${query}`, {
+    const { data } = await axios.post(`${rootUrl}?${query}`, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
     });
 
-    const decoded = qs.parse(data) as { access_token: string };
+    const decoded = qs.parse(data) as {
+      access_token: string;
+      refresh_token: string;
+    };
 
     return decoded;
   }
@@ -152,9 +154,9 @@ class AuthService {
     }
 
     try {
-      const { access_token } = (await this.getGithubOAuthToken(code)) as {
-        access_token: string;
-      };
+      const { access_token, refresh_token } = await this.getGithubOAuthToken(
+        code
+      );
 
       const { email, avatar_url, login, name, id } = (await this.getGithubUser(
         access_token
@@ -171,7 +173,7 @@ class AuthService {
           provider: 'github',
           verified: true,
           githubAccessToken: access_token,
-          // profile Photo
+          githubAppToken: refresh_token,
         });
       } else {
         if (userExists.provider !== 'github') {
@@ -186,6 +188,7 @@ class AuthService {
           },
           data: {
             githubAccessToken: access_token,
+            githubAppToken: refresh_token,
           },
           select: {
             id: true,

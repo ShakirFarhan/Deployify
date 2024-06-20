@@ -7,7 +7,92 @@ import { validateBuildCommand, validateEnvs } from '../utils/validation';
 import EcsService from './aws/ecs.service';
 import slugify from 'slugify';
 import { User } from '../types/user.type';
+import GithubService from './github.service';
+import { getPaginationParams } from '../utils/pagination';
 class ProjectService {
+  public static async projects(data: {
+    userId: string;
+    page: number;
+    limit: number;
+  }) {
+    const { userId, limit = 10, page = 1 } = data;
+
+    if (!userId)
+      throw new ApiError(httpStatus.BAD_REQUEST, 'userId is required');
+    const params = getPaginationParams({ page, limit });
+
+    let query = { userId: userId };
+    const projects = await prismaClient.project.findMany({
+      where: query,
+      ...params,
+    });
+
+    return {
+      projects,
+      page,
+      totalPages: Math.ceil(
+        (await prismaClient.project.count({ where: query })) / limit
+      ),
+    };
+  }
+
+  public static async project(userId: string, projectId: string) {
+    if (!userId || !projectId)
+      throw new ApiError(httpStatus.BAD_REQUEST, 'Missing fields');
+    return await prismaClient.project.findUnique({
+      where: {
+        id: projectId,
+        userId,
+      },
+    });
+  }
+
+  public static async findById(id: string) {
+    return await prismaClient.project.findUnique({
+      where: {
+        id,
+      },
+    });
+  }
+  public static async findBySubDomain(domain: string) {
+    if (!domain || typeof domain !== 'string')
+      throw new ApiError(httpStatus.BAD_REQUEST, 'provide valid sub domain');
+    return await prismaClient.project.findUnique({
+      where: {
+        subDomain: domain,
+      },
+    });
+  }
+  public static async findByUrl(url: string) {
+    return await prismaClient.project.findFirst({
+      where: {
+        repo: url,
+      },
+    });
+  }
+  public static async getEnviromentVariables(
+    projectId: string,
+    userId: string
+  ) {
+    const project = await this.validateProjectAndUser(projectId, userId);
+    if (!project) throw new ApiError(httpStatus.NOT_FOUND, 'Project not found');
+    // TODO: Users can look for env's with name & projectId
+    return await prismaClient.environment.findFirst({
+      where: {
+        projectId,
+      },
+      select: {
+        id: true,
+        environmentVariables: {
+          select: {
+            id: true,
+            key: true,
+            value: true,
+          },
+        },
+      },
+    });
+  }
   private static async validateProjectAndUser(
     projectId: string,
     userId: string
@@ -53,7 +138,6 @@ class ProjectService {
       throw new ApiError(httpStatus.CONFLICT, 'sub domain already exist');
 
     validateBuildCommand(buildCommand);
-
     const project = await prismaClient.project.create({
       data: {
         name,
@@ -68,22 +152,6 @@ class ProjectService {
     return project;
   }
 
-  public static async findById(id: string) {
-    return await prismaClient.project.findUnique({
-      where: {
-        id,
-      },
-    });
-  }
-  public static async findBySubDomain(domain: string) {
-    if (!domain || typeof domain !== 'string')
-      throw new ApiError(httpStatus.BAD_REQUEST, 'provide valid sub domain');
-    return await prismaClient.project.findUnique({
-      where: {
-        subDomain: domain,
-      },
-    });
-  }
   public static async update(data: {
     project: Pick<
       Project,
@@ -116,13 +184,7 @@ class ProjectService {
       },
     });
   }
-  public static async findByUrl(url: string) {
-    return await prismaClient.project.findFirst({
-      where: {
-        repo: url,
-      },
-    });
-  }
+
   public static async addEnviromentVariables(data: {
     userId: string;
     projectId: string;
@@ -149,31 +211,6 @@ class ProjectService {
                 data: enviromentVariables,
               },
             },
-          },
-        },
-      },
-    });
-  }
-
-  public static async getEnviromentVariables(
-    projectId: string,
-
-    userId: string
-  ) {
-    const project = await this.validateProjectAndUser(projectId, userId);
-    if (!project) throw new ApiError(httpStatus.NOT_FOUND, 'Project not found');
-    // TODO: Users can look for env's with name & projectId
-    return await prismaClient.environment.findFirst({
-      where: {
-        projectId,
-      },
-      select: {
-        id: true,
-        environmentVariables: {
-          select: {
-            id: true,
-            key: true,
-            value: true,
           },
         },
       },
@@ -246,15 +283,22 @@ class ProjectService {
     const updateVariables = await Promise.all(
       variables.map(async (variable) => {
         // TODO: Can add validation to check whether the environment exist before updating
-        return await prismaClient.environmentVariable.update({
-          where: {
-            id: variable.id,
-          },
-          data: {
-            key: variable.key,
-            value: variable.value,
-          },
-        });
+        try {
+          return await prismaClient.environmentVariable.update({
+            where: {
+              id: variable.id,
+            },
+            data: {
+              key: variable.key,
+              value: variable.value,
+            },
+          });
+        } catch (error) {
+          throw new ApiError(
+            httpStatus.INTERNAL_SERVER_ERROR,
+            'Internal Server Error'
+          );
+        }
       })
     );
     return updateVariables;
@@ -262,14 +306,40 @@ class ProjectService {
 
   public static async createDeployment(data: {
     projectId: string;
-    user: Pick<User, 'id' | 'githubUsername' | 'githubAccessToken'>;
+    user: Required<Pick<User, 'id' | 'githubUsername' | 'githubAccessToken'>>;
   }) {
     const { projectId, user } = data;
+
     if (!projectId || !user)
       throw new ApiError(httpStatus.BAD_REQUEST, 'Missing fields');
     const project = await this.validateProjectAndUser(projectId, user.id);
-
     if (!project) throw new ApiError(httpStatus.NOT_FOUND, 'Project not found');
+    /* Handling different deployment methods so that the builder service does not get errors 
+    related to repository access. */
+    let extraEnvs: { name: string; value: string }[];
+
+    if (project.deploymentMethod === 'git') {
+      extraEnvs = [
+        {
+          name: 'GIT_ACCESS_TOKEN',
+          value: await GithubService.handleAccessToken(
+            user.githubAccessToken as string,
+            user.id
+          ),
+        },
+        {
+          name: 'GIT_USERNAME',
+          value: user.githubUsername as string,
+        },
+        {
+          name: 'GIT_REPO',
+          value: project.repo,
+        },
+      ];
+    } else {
+      extraEnvs = [{ name: 'REPOSITORY_URL', value: project.repo }];
+    }
+
     const deployment = await prismaClient.deployment.create({
       data: {
         project: {
@@ -287,10 +357,9 @@ class ProjectService {
         { name: 'BUILD_COMMAND', value: project.buildCommand },
         { name: 'OUTPUT_DIR', value: project.outputDir },
         { name: 'SUB_DOMAIN', value: project.subDomain },
-        { name: 'REPOSITORY_URL', value: project.repo },
         { name: 'PROJECT_ID', value: project.id },
         { name: 'DEPLOYMENT_ID', value: deployment.id },
-        // user.githubUsername
+        ...extraEnvs,
       ]);
       return deployment;
     }
@@ -305,9 +374,9 @@ class ProjectService {
       { name: 'BUILD_COMMAND', value: project.buildCommand },
       { name: 'OUTPUT_DIR', value: project.outputDir },
       { name: 'SUB_DOMAIN', value: project.subDomain },
-      { name: 'REPOSITORY_URL', value: project.repo },
       { name: 'PROJECT_ID', value: project.id },
       { name: 'DEPLOYMENT_ID', value: deployment.id },
+      ...extraEnvs,
     ]);
     return deployment;
   }
