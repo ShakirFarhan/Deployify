@@ -14,7 +14,6 @@ export const isUserAuthenticated = async (
     if (!decodedToken) {
       return res.status(401).json({ message: 'Invalid Token' });
     }
-    console.log(decodedToken);
     const user = await prismaClient.user.findUnique({
       where: {
         id: decodedToken.id,
