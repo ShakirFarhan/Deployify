@@ -8,6 +8,8 @@ import path from 'path';
 import axios from 'axios';
 import qs from 'qs';
 import UserService from './user.service';
+import { prismaClient } from '../client';
+import ProjectService from './project.service';
 
 class GithubService {
   /* In order to authenticate as an app or generate an installation access token,
@@ -44,7 +46,7 @@ class GithubService {
     return data;
   }
   /* Lists particular installation for this Github app using the JWT Token.  */
-  public static async installationById(id: string, jwtToken: string) {
+  public static async installationById(id: number, jwtToken: string) {
     if (!jwtToken || !id)
       throw new ApiError(httpStatus.BAD_REQUEST, 'provide jwt token & id');
 
@@ -86,6 +88,7 @@ class GithubService {
   */
   public static async getInstallationAccessToken(installationId: number) {
     const jwtToken = this.generateJwt();
+
     const apiUrl = `https://api.github.com/app/installations/${installationId}/access_tokens`;
 
     const headers = {
@@ -94,8 +97,8 @@ class GithubService {
     };
 
     try {
-      const { data } = await axios.post(apiUrl, { headers });
-      return data;
+      const { data } = await axios.post(apiUrl, {}, { headers });
+      return data.token;
     } catch (error: any) {
       throw new ApiError(
         httpStatus.BAD_REQUEST,
@@ -107,6 +110,7 @@ class GithubService {
   public static async getInstallationRepositories(accessToken: string) {
     if (!accessToken)
       throw new ApiError(httpStatus.BAD_REQUEST, 'provided access token');
+
     const { data } = await axios.get(
       'https://api.github.com/installation/repositories',
       {
@@ -117,47 +121,6 @@ class GithubService {
     );
 
     return data;
-  }
-
-  // To create a webhook for a specific repository, However, this app uses Github app then it will automatically handled
-  public static async setupWebhook(
-    accessToken: string,
-    repoName: string,
-    ownerName: string
-  ) {
-    if (!accessToken || !repoName || !ownerName) {
-      throw new ApiError(httpStatus.BAD_REQUEST, 'Missing fields');
-    }
-
-    try {
-      const response = await fetch(
-        `https://api.github.com/repos/${ownerName}/${repoName}/hooks`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `token ${accessToken}`,
-            Accept: 'application/vnd.github.v3+json',
-          },
-          body: JSON.stringify({
-            name: 'web',
-            active: true,
-            events: ['push'],
-            config: {
-              url: config.WEBHOOK.URL,
-              content_type: 'json',
-              secret: config.WEBHOOK.SECRET,
-            },
-          }),
-        }
-      );
-      const data = await response.json();
-      console.log('WEBHOOK');
-      console.log(data);
-      return data;
-    } catch (error) {
-      console.log('ERROR in webhook setup');
-      console.log(error);
-    }
   }
 
   public static async verifyWebhookSecret(signature: string, body: string) {
@@ -181,10 +144,8 @@ class GithubService {
 
   // Checks if the access token is valid if not creates a new access token and returns
   public static async handleAccessToken(accessToken: string, userId: string) {
-    console.log(accessToken, userId);
-
     try {
-      const response = await axios.get('https://api.github.com/user', {
+      await axios.get('https://api.github.com/user', {
         headers: {
           Authorization: `token ${accessToken}`,
           'Content-Type': 'application/json',
@@ -198,22 +159,64 @@ class GithubService {
       const token = await this.refreshToken(user.githubAppToken);
       if (!token.access_token)
         throw new ApiError(httpStatus.BAD_REQUEST, 'Invalid access token');
-      console.log('NEW ACCESS TOKEN');
-
-      console.log(token.access_token);
       await UserService.update(user.id, {
         githubAccessToken: token.access_token,
         githubAppToken: token.refresh_token,
       });
       return token.access_token;
     }
+  }
+  public static async handleNewInstallation(
+    installationId: number,
+    username: string
+  ) {
+    const user = await UserService.findByGithubUsername(username);
+    if (!user) return;
+    return await UserService.update(user.id, {
+      installationId,
+    });
+  }
+  public static async handleUninstallation(
+    installationId: number,
+    username: string
+  ) {
+    const user = await UserService.findByGithubUsername(username);
+    if (!user) return;
+    return await UserService.update(user.id, {
+      installationId: null,
+    });
+  }
 
-    // } catch (error) {
-    //   throw new ApiError(
-    //     httpStatus.INTERNAL_SERVER_ERROR,
-    //     'Invalid access token'
-    //   );
-    // }
+  public static async handleReDeployment(repo: string, username: string) {
+    const projects = await prismaClient.project.findMany({
+      where: {
+        repo: repo,
+        deploymentMethod: 'git',
+        user: {
+          githubUsername: username,
+        },
+      },
+      include: {
+        user: {
+          select: {
+            githubAccessToken: true,
+            id: true,
+            githubAppToken: true,
+          },
+        },
+      },
+    });
+    if (!projects || projects.length === 0) return;
+    for (const project of projects) {
+      await ProjectService.createDeployment({
+        projectId: project.id,
+        user: {
+          id: project.user.id,
+          githubUsername: username,
+          githubAccessToken: project.user.githubAccessToken,
+        },
+      });
+    }
   }
 }
 export default GithubService;

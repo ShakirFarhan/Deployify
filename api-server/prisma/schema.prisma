@@ -34,10 +34,10 @@ model User{
   salt String?
   githubAccessToken String? @map("github_access_token")
   githubAppToken String? @map("github_app_token")
-  installationId String? @map("installation_id")
+  installationId Int? @unique @map("installation_id")
   fullName String? @map("full_name")
   verified Boolean @default(false)
-  githubUsername String? @map("github_username")
+  githubUsername String? @unique @map("github_username")
   status AccountStatus @default(active)
   role UserRole @default(user)
   provider AuthProvider @default(local)
@@ -104,7 +104,7 @@ model Environment {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   @@unique([name,projectId])
-  @@map("enviroments")
+  @@map("environments")
 }
 model EnvironmentVariable{
   id String @id @default(uuid())
@@ -115,5 +115,9 @@ model EnvironmentVariable{
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   @@unique([environmentId,key])
-  @@map("enviroment_variables")
+  @@map("environment_variables")
+}
+
+model GithubUser{
+  id String @id @default(uuid())
 }

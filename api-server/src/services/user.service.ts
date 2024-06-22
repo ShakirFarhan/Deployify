@@ -35,6 +35,13 @@ class UserService {
       },
     });
   }
+  public static async findByGithubUsername(username: string) {
+    return await prismaClient.user.findUnique({
+      where: {
+        githubUsername: username,
+      },
+    });
+  }
   public static async update(
     userId: string,
     data: Partial<Omit<User, 'role'>>

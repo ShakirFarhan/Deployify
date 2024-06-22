@@ -212,5 +212,30 @@ class AuthService {
       throw new ApiError(httpStatus.BAD_REQUEST, error.message);
     }
   }
+  // Used to connect an existing account to github
+  public static async connectGithub(userId: string, code: string) {
+    if (!userId || !code)
+      throw new ApiError(httpStatus.BAD_REQUEST, 'Missing Fields');
+
+    try {
+      const { access_token, refresh_token } = await this.getGithubOAuthToken(
+        code
+      );
+      const { login } = (await this.getGithubUser(
+        access_token
+      )) as GitHubUserPayload;
+
+      const githubUser = await UserService.findByGithubUsername(login);
+      if (githubUser)
+        throw new ApiError(httpStatus.CONFLICT, 'Github user already exists');
+      await UserService.update(userId, {
+        githubUsername: login,
+        githubAccessToken: access_token,
+        githubAppToken: refresh_token,
+      });
+    } catch (error: any) {
+      throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, error.message);
+    }
+  }
 }
 export default AuthService;
