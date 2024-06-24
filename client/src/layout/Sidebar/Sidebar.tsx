@@ -11,6 +11,10 @@ import dummyUser from '../../assets/User.jpg';
 import { FaRegCompass } from 'react-icons/fa';
 import { AiOutlineMessage } from 'react-icons/ai';
 import { RiNotification4Line } from 'react-icons/ri';
+import { TfiWorld } from 'react-icons/tfi';
+import { FaHome } from 'react-icons/fa';
+import { GoProject } from 'react-icons/go';
+import { RxRocket } from 'react-icons/rx';
 import {
   MdOutlineDashboard,
   MdOutlineRocketLaunch,
@@ -37,131 +41,53 @@ const Sidebar = () => {
           <div className={styles.menu__items__top}>
             <Link
               className={`${styles.menu__item} ${
-                location.pathname === '/dashboard' ? styles.active__link : ''
+                location.pathname === '/overview' ? styles.active__link : ''
               } `}
-              to={'/dashboard'}
-              title="Dashboard"
+              to={'/overview'}
+              title="Overview"
             >
-              <MdOutlineDashboard fontSize={20} />
-              <span>Dashboard</span>
+              <FaHome fontSize={20} />
+              <span>Overview</span>
             </Link>
             <Link
               className={`${styles.menu__item} ${
-                location.pathname === '/spark-pool' ? styles.active__link : ''
+                location.pathname === '/projects' ? styles.active__link : ''
               } `}
-              to={'/spark-pool'}
-              title="Spark Pool"
+              to={'/projects'}
+              title="Projects"
             >
-              <MdOutlineSwipeRight fontSize={20} />
-              <span>Spark Pool</span>
+              <GoProject fontSize={20} />
+              <span>Projects</span>
             </Link>
             <Link
               className={`${styles.menu__item} ${
-                location.pathname === '/explore' ? styles.active__link : ''
+                location.pathname === '/deployments' ? styles.active__link : ''
               } `}
-              to={'/explore'}
-              title="Explore"
+              to={'/deployments'}
+              title="Deployments"
             >
-              <FaRegCompass fontSize={20} />
-              <span>Explore</span>
+              <RxRocket fontSize={20} />
+              <span>Deployments</span>
             </Link>
             <Link
               className={`${styles.menu__item} ${
                 location.pathname === '/me/boostlist' ? styles.active__link : ''
               } `}
-              to={'/me/boostlist'}
-              title="Boost List"
+              to={'/domains'}
+              title="Domains"
             >
-              <MdOutlineRocketLaunch fontSize={20} />
-              <span>Boost List</span>
-            </Link>
-            <Link
-              className={`${styles.menu__item} ${
-                location.pathname === '/buy' ? styles.active__link : ''
-              } `}
-              to={'/buy'}
-              title="Buy"
-            >
-              <BiPurchaseTag fontSize={20} />
-              <span>buy</span>
-            </Link>
-            <Link
-              className={`${styles.menu__item} ${
-                location.pathname === '/messages' ? styles.active__link : ''
-              } `}
-              to={'/messages'}
-              title="Messages"
-            >
-              <AiOutlineMessage fontSize={20} />
-              <span>Messages</span>
-
-              <div className={styles.badge}>2</div>
+              <TfiWorld fontSize={20} />
+              <span>Domains</span>
             </Link>
 
             <Link
-              className={`${styles.menu__item} ${styles.item__bottom} ${
-                location.pathname === '/notifications'
-                  ? styles.active__link
-                  : ''
-              } `}
-              to={'/notifications'}
-              title="Notifications"
-            >
-              <RiNotification4Line fontSize={20} />
-              <span>Notifications</span>
-              <div className={styles.badge}>2</div>
-            </Link>
-            <Link
-              className={`${styles.menu__item} ${styles.item__bottom} ${
+              className={`${styles.menu__item} ${
                 location.pathname === '/settings' ? styles.active__link : ''
               } `}
               to={'/settings'}
               title="Settings"
             >
-              <MdOutlineSettings fontSize={20} />
-              <span>Settings</span>
-            </Link>
-
-            {userInfo && (
-              <Link
-                className={`${styles.item__userprofile} ${
-                  location.pathname === '/profile' ? styles.active__link : ''
-                }`}
-                style={{ width: '100%' }}
-                to="/profile"
-              >
-                <img
-                  src={
-                    userInfo.profilePhoto ? userInfo.profilePhoto : dummyUser
-                  }
-                  alt="Profile"
-                />
-              </Link>
-            )}
-          </div>
-
-          <div className={styles.menu__items__bottom}>
-            <Link
-              className={`${styles.menu__item} ${
-                location.pathname === ''
-                  ? styles.active__link
-                  : '/notifications'
-              } `}
-              to={'/notifications'}
-              title="Notifications"
-            >
-              <RiNotification4Line fontSize={20} />
-              <span>Notifications</span>
-              <div className={styles.badge}>2</div>
-            </Link>
-            <Link
-              className={`${styles.menu__item} ${
-                location.pathname === '' ? styles.active__link : '/settings'
-              } `}
-              to={'/settings'}
-              title="Settings"
-            >
-              <MdOutlineSettings fontSize={20} />
+              <MdOutlineSettings fontSize={23} />
               <span>Settings</span>
             </Link>
           </div>
@@ -169,23 +95,20 @@ const Sidebar = () => {
 
         <div className={styles.separator}></div>
 
-        {userInfo && (
-          <div className={styles.user__profile}>
-            <Link
-              className={`${
-                location.pathname === '/profile' ? styles.active__link : ''
-              }`}
-              style={{ width: '100%' }}
-              to="/profile"
-            >
-              <img
-                src={userInfo.profilePhoto ? userInfo.profilePhoto : dummyUser}
-                alt="Profile"
-              />
-              <span>Profile</span>
-            </Link>
-          </div>
-        )}
+        {/* {userInfo && ( */}
+        <div className={styles.user__profile}>
+          <Link
+            className={`${
+              location.pathname === '/profile' ? styles.active__link : ''
+            }`}
+            style={{ width: '100%' }}
+            to="/profile"
+          >
+            <img src={dummyUser} alt="Profile" />
+            <span>Profile</span>
+          </Link>
+        </div>
+        {/* )} */}
       </div>
     </aside>
   );
