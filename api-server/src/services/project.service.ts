@@ -1,4 +1,5 @@
 import httpStatus from 'http-status';
+import { Response } from 'express';
 import { EnvVariables, Project } from '../types/project.types';
 import ApiError from '../utils/apiError';
 import UserService from './user.service';

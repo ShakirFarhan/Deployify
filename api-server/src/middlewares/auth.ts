@@ -33,7 +33,6 @@ export const isUserAuthenticated = async (
       return res.status(401).json({ error: 'User not verified' });
 
     req.user = user;
-    console.log(req.user);
     next();
   } catch (error) {
     console.log(error);

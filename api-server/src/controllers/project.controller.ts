@@ -3,6 +3,8 @@ import { ErrorHandler } from '../utils/apiError';
 import ProjectService from '../services/project.service';
 import { EnvVariables } from '../types/project.types';
 import { config } from '../config/production';
+import eventEmitter from '../utils/eventEmitter';
+import SentEventService from '../services/sse.service';
 export const createProject = async (req: Request, res: Response) => {
   let {
     name,
@@ -54,6 +56,22 @@ export const createProject = async (req: Request, res: Response) => {
       message: 'Project created successfully',
       deploymentId: deployment?.id,
       url: `${project.subDomain}.${config.BACKEND_URL}`,
+    });
+  } catch (error: any) {
+    ErrorHandler(error, res);
+  }
+};
+export const streamLogs = async (req: Request, res: Response) => {
+  const { deploymentId } = req.params;
+  try {
+    SentEventService.start(res);
+    eventEmitter.on('log', (data) => {
+      data = JSON.parse(data);
+      if (data) {
+        if (data.deploymentId === deploymentId) {
+          SentEventService.sendLogToClient(res, data.log);
+        }
+      }
     });
   } catch (error: any) {
     ErrorHandler(error, res);

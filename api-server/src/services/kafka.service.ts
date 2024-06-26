@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import ProjectService from './project.service';
 import { prismaClient } from '../client';
+import eventEmitter from '../utils/eventEmitter';
 export const kafkaClient = new Kafka({
   clientId: `API-SERVER`,
   brokers: [config.KAFKA.BROKER],
@@ -18,7 +19,6 @@ export const kafkaClient = new Kafka({
 });
 
 export async function logsConsumer() {
-
   const consumer = kafkaClient.consumer({ groupId: 'deployment-logs' });
   await consumer.connect();
   await consumer.subscribe({ topic: 'builder-logs' });
@@ -47,6 +47,11 @@ export async function logsConsumer() {
           if (status) {
             await ProjectService.updateDeployment(DEPLOYMENT_ID, { status });
           }
+          // Emitting a new Event for SSE
+          eventEmitter.emit(
+            'log',
+            JSON.stringify({ deploymentId: DEPLOYMENT_ID, log })
+          );
           await ProjectService.createLog(DEPLOYMENT_ID, log);
           resolveOffset(message.offset);
           await commitOffsetsIfNecessary({

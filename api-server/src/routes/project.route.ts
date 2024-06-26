@@ -9,6 +9,7 @@ import {
   getProjects,
   projectById,
   projectEnvironments,
+  streamLogs,
   updateEnvironmentVariables,
 } from '../controllers/project.controller';
 const router = express.Router();
@@ -37,5 +38,6 @@ router.delete(
   deleteEnvironmentVariables
 );
 router.get('/:deploymentId/logs', isUserAuthenticated, getLogs);
+router.get('/:deploymentId/stream-logs', isUserAuthenticated, streamLogs);
 
 export default router;
