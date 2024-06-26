@@ -53,14 +53,14 @@ async function init() {
 
   prc.on('close', async function (code) {
     console.log(code);
-    // if (code === 0) {
-    //   console.log('Build completed successfully');
-    //   await publishLog('Build completed successfully.');
-    // } else {
-    //   console.log('Build failed');
-    //   await publishLog('Build failed.', 'failed');
-    //   process.exit(1);
-    // }
+    if (code === 0) {
+      console.log('Build completed successfully');
+      await publishLog('Build completed successfully.');
+    } else {
+      console.log('Build failed');
+      await publishLog('Build failed.', 'failed');
+      process.exit(1);
+    }
 
     console.log('Reading build output directory...');
     await publishLog('Reading build output directory...', 'uploading');
