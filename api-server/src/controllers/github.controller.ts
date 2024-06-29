@@ -23,7 +23,8 @@ export const webhookHandler = async (req: Request, res: Response) => {
       // Handle Redeployment
       const repo = body.repository.name;
       const username = body.repository.owner.login;
-      await GithubService.handleReDeployment(repo, username);
+      const commitHash = body.after;
+      await GithubService.handleReDeployment(repo, username, commitHash);
     }
   } catch (error: any) {
     ErrorHandler(error, res);

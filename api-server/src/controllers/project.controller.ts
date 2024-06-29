@@ -5,6 +5,7 @@ import { EnvVariables } from '../types/project.types';
 import { config } from '../config/production';
 import eventEmitter from '../utils/eventEmitter';
 import SentEventService from '../services/sse.service';
+import GithubService from '../services/github.service';
 export const createProject = async (req: Request, res: Response) => {
   let {
     name,
@@ -41,7 +42,19 @@ export const createProject = async (req: Request, res: Response) => {
         };
       });
     }
-
+    let commitHash;
+    if (project.deploymentMethod === 'git') {
+      let commits = await GithubService.repoCommits(
+        { author: req.user.githubUsername as string, name: repo },
+        await GithubService.handleAccessToken(
+          req.user.githubAccessToken as string,
+          req.user.id
+        )
+      );
+      console.log(commits);
+      commitHash = commits[0].sha;
+    }
+    console.log(commitHash);
     // Creating a deployment for the project
     const deployment = await ProjectService.createDeployment({
       projectId: project.id,
@@ -50,6 +63,7 @@ export const createProject = async (req: Request, res: Response) => {
         githubUsername: req.user.githubUsername as string,
         githubAccessToken: req.user.githubAccessToken as string,
       },
+      commitHash,
     });
 
     res.status(200).json({
@@ -90,8 +104,23 @@ export const getLogs = async (req: Request, res: Response) => {
 export const deployProject = async (req: Request, res: Response) => {
   const { projectId } = req.params;
   try {
+    // Temp Solution for Manual Deployment of Github connected projects
+    const project = await ProjectService.findById(projectId);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+    let commitHash;
+    if (project.deploymentMethod === 'git') {
+      let commits = await GithubService.repoCommits(
+        { author: req.user.githubUsername as string, name: project.repo },
+        await GithubService.handleAccessToken(
+          req.user.githubAccessToken as string,
+          req.user.id
+        )
+      );
+      commitHash = commits[0].sha;
+    }
     await ProjectService.createDeployment({
       projectId: projectId,
+      commitHash,
       user: {
         id: req.user.id,
         githubUsername: req.user.githubUsername as string,
@@ -195,6 +224,21 @@ export const deleteEnvironmentVariables = async (
       req.user.id
     );
     res.status(200).json({ message: 'Enviroment variables deleted' });
+  } catch (error: any) {
+    ErrorHandler(error, res);
+  }
+};
+
+export const rollbackDeployment = async (req: Request, res: Response) => {
+  const { deploymentId } = req.params;
+  if (!deploymentId)
+    return res.status(400).json({ error: 'Deploymentid not provided' });
+  try {
+    const deploymentRollback = await ProjectService.rollbackDeployment(
+      deploymentId,
+      req.user.id
+    );
+    res.status(200).json({ message: 'Deployment rolled back successfully' });
   } catch (error: any) {
     ErrorHandler(error, res);
   }
