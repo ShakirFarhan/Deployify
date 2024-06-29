@@ -45,6 +45,18 @@ class GithubService {
 
     return data;
   }
+  public static async repoCommits(
+    repo: { author: string; name: string },
+    accessToken: string
+  ) {
+    const rootUrl = `https://api.github.com/repos/${repo.author}/${repo.name}/commits`;
+    const { data } = await axios.get(rootUrl, {
+      headers: {
+        Authorization: `token ${accessToken}`,
+      },
+    });
+    return data;
+  }
   /* Lists particular installation for this Github app using the JWT Token.  */
   public static async installationById(id: number, jwtToken: string) {
     if (!jwtToken || !id)
@@ -187,7 +199,11 @@ class GithubService {
     });
   }
 
-  public static async handleReDeployment(repo: string, username: string) {
+  public static async handleReDeployment(
+    repo: string,
+    username: string,
+    commitHash: string
+  ) {
     const projects = await prismaClient.project.findMany({
       where: {
         repo: repo,
@@ -210,6 +226,7 @@ class GithubService {
     for (const project of projects) {
       await ProjectService.createDeployment({
         projectId: project.id,
+        commitHash,
         user: {
           id: project.user.id,
           githubUsername: username,

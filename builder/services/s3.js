@@ -14,6 +14,7 @@ const uploadToS3 = async (key, body, type) => {
     Body: body,
     ContentType: type,
   });
+  console.log('SENT');
   await s3Client.send(command);
 };
 

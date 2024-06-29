@@ -20,6 +20,7 @@ async function publishLog(log, status) {
     ],
   });
 }
+console.log(process.env);
 
 async function init() {
   await producer.connect();
@@ -36,11 +37,6 @@ async function init() {
     'building'
   );
   const prc = exec(`cd ${outDirPath} && npm install && ${BUILD_COMMAND}`);
-  console.log(process.env.GIT_REPO);
-  console.log(process.env.REPOSITORY_URL);
-  console.log(process.env.GIT_ACCESS_TOKEN);
-  console.log(process.env.GIT_USERNAME);
-
   prc.stdout.on('data', async function (data) {
     console.log('LOG:', data.toString());
     await publishLog(data.toString());
@@ -53,14 +49,6 @@ async function init() {
 
   prc.on('close', async function (code) {
     console.log(code);
-    if (code === 0) {
-      console.log('Build completed successfully');
-      await publishLog('Build completed successfully.');
-    } else {
-      console.log('Build failed');
-      await publishLog('Build failed.', 'failed');
-      process.exit(1);
-    }
 
     console.log('Reading build output directory...');
     await publishLog('Reading build output directory...', 'uploading');

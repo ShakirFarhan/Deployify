@@ -9,6 +9,7 @@ import {
   getProjects,
   projectById,
   projectEnvironments,
+  rollbackDeployment,
   streamLogs,
   updateEnvironmentVariables,
 } from '../controllers/project.controller';
@@ -39,5 +40,9 @@ router.delete(
 );
 router.get('/:deploymentId/logs', isUserAuthenticated, getLogs);
 router.get('/:deploymentId/stream-logs', isUserAuthenticated, streamLogs);
-
+router.patch(
+  '/:deploymentId/rollback',
+  isUserAuthenticated,
+  rollbackDeployment
+);
 export default router;

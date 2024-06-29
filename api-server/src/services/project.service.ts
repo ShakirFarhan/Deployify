@@ -94,6 +94,18 @@ class ProjectService {
       },
     });
   }
+  public static async getDeployment(deploymentId: string, userId: string) {
+    const deployment = await prismaClient.deployment.findUnique({
+      where: {
+        id: deploymentId,
+        project: {
+          userId,
+        },
+      },
+    });
+    return deployment;
+  }
+
   private static async validateProjectAndUser(
     projectId: string,
     userId: string
@@ -107,6 +119,7 @@ class ProjectService {
     if (!project) throw new ApiError(httpStatus.NOT_FOUND, 'Project not found');
     return project;
   }
+
   public static async create(
     data: Pick<
       Project,
@@ -308,8 +321,9 @@ class ProjectService {
   public static async createDeployment(data: {
     projectId: string;
     user: Required<Pick<User, 'id' | 'githubUsername' | 'githubAccessToken'>>;
+    commitHash?: string;
   }) {
-    const { projectId, user } = data;
+    const { projectId, user, commitHash } = data;
 
     if (!projectId || !user)
       throw new ApiError(httpStatus.BAD_REQUEST, 'Missing fields');
@@ -340,9 +354,12 @@ class ProjectService {
     } else {
       extraEnvs = [{ name: 'REPOSITORY_URL', value: project.repo }];
     }
-
+    if (commitHash) {
+      extraEnvs.push({ name: 'GIT_COMMIT_HASH', value: commitHash });
+    }
     const deployment = await prismaClient.deployment.create({
       data: {
+        commitHash,
         project: {
           connect: {
             id: projectId,
@@ -431,6 +448,49 @@ class ProjectService {
         createdAt: 'desc',
       },
     });
+  }
+
+  public static async rollbackDeployment(deploymentId: string, userId: string) {
+    const deployment = await prismaClient.deployment.findUnique({
+      where: {
+        id: deploymentId,
+        project: {
+          userId,
+        },
+      },
+      include: {
+        project: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                githubAccessToken: true,
+                githubUsername: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    if (!deployment)
+      throw new ApiError(httpStatus.NOT_FOUND, 'Deployment not found');
+    if (deployment.project.deploymentMethod !== 'git') {
+      throw new ApiError(
+        httpStatus.FORBIDDEN,
+        'Only Git deployments can be rolled back'
+      );
+    }
+    if (!deployment.commitHash)
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        'No commit hash found in deployment'
+      );
+    const rollbackDeployment = await ProjectService.createDeployment({
+      projectId: deployment.projectId,
+      user: deployment.project.user,
+      commitHash: deployment.commitHash,
+    });
+    return rollbackDeployment;
   }
 }
 
