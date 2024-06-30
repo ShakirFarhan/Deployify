@@ -1,9 +1,8 @@
-import { Kafka, Offsets } from 'kafkajs';
+import { Kafka } from 'kafkajs';
 import { config } from '../config/production';
 import fs from 'fs';
 import path from 'path';
 import ProjectService from './project.service';
-import { prismaClient } from '../client';
 import eventEmitter from '../utils/eventEmitter';
 export const kafkaClient = new Kafka({
   clientId: `API-SERVER`,
@@ -17,11 +16,10 @@ export const kafkaClient = new Kafka({
     ca: [fs.readFileSync(path.resolve(__dirname, '../../ca.pem'), 'utf-8')],
   },
 });
-
 export async function logsConsumer() {
   const consumer = kafkaClient.consumer({ groupId: 'deployment-logs' });
   await consumer.connect();
-  await consumer.subscribe({ topic: 'builder-logs' });
+  await consumer.subscribe({ topics: ['builder-logs', 'proxy-analytics'] });
   await consumer.run({
     autoCommit: false,
     eachBatch: async function ({
@@ -34,25 +32,31 @@ export async function logsConsumer() {
       const messages = batch.messages;
       for (const message of messages) {
         if (!message.value) return;
-
-        const { DEPLOYMENT_ID, log, status } = JSON.parse(
-          message.value.toString()
-        ) as {
-          DEPLOYMENT_ID: string;
-          log: string;
-          status?: any;
-        };
-
         try {
-          if (status) {
-            await ProjectService.updateDeployment(DEPLOYMENT_ID, { status });
+          if (batch.topic === 'builder-logs') {
+            const { DEPLOYMENT_ID, log, status } = JSON.parse(
+              message.value.toString()
+            ) as {
+              DEPLOYMENT_ID: string;
+              log: string;
+              status?: any;
+            };
+
+            if (status) {
+              await ProjectService.updateDeployment(DEPLOYMENT_ID, { status });
+            }
+            // Emitting a new Event for SSE
+            eventEmitter.emit(
+              'log',
+              JSON.stringify({ deploymentId: DEPLOYMENT_ID, log })
+            );
+            await ProjectService.createLog(DEPLOYMENT_ID, log);
+          } else if (batch.topic === 'proxy-analytics') {
+            /* 
+            Handling Analytics
+            Either Storing in Current DB(Postgres) or Influx
+            */
           }
-          // Emitting a new Event for SSE
-          eventEmitter.emit(
-            'log',
-            JSON.stringify({ deploymentId: DEPLOYMENT_ID, log })
-          );
-          await ProjectService.createLog(DEPLOYMENT_ID, log);
           resolveOffset(message.offset);
           await commitOffsetsIfNecessary({
             topics: [

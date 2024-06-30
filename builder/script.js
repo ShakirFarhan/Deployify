@@ -20,7 +20,6 @@ async function publishLog(log, status) {
     ],
   });
 }
-console.log(process.env);
 
 async function init() {
   await producer.connect();
